@@ -21,6 +21,7 @@ local gradient2 = Material("vgui/gradient_up")
 local gradient3 = Material("vgui/gradient_down")
 
 local hasOpenedPanel = false
+local chatMode = false
 
 local chatType = "Global"
 local chatTypes = {"Global", "Local", "DM", "Admin", "Trade", "Recruitment"}
@@ -84,43 +85,49 @@ local function ChatBoxPanel()
     if not frame then return end
 
     function frame:Paint( w, h )
-        surface.SetDrawColor( 20,20,20, 40)
-        surface.DrawRect( 0, 0, w, h )
-        surface.SetDrawColor( 219,219,219,178)       
-        surface.DrawOutlinedRect( 0, 0, w, h )
+        if hasOpenedPanel then
+            surface.SetDrawColor( 20,20,20, 0)
+            surface.DrawRect( 0, 0, w, h )
+            surface.SetDrawColor( 219,219,219,178)       
+            surface.DrawOutlinedRect( 0, 0, w, h )
+        end
     end
 
     local chatBarPanel = vgui.Create("Panel", frame)
     chatBarPanel:SetSize(frame:GetWide(), 50)
     chatBarPanel:SetPos(0, frame:GetTall() - 50)
     function chatBarPanel:Paint( w, h )
-        surface.SetDrawColor(20,20,20, 10)
-        surface.DrawRect(0, 0, w, h )
-        surface.SetDrawColor( 219,219,219,105)       
-        surface.DrawOutlinedRect( 0, 0, w, h )
+        if hasOpenedPanel then
+            surface.SetDrawColor(20,20,20, 10)
+            surface.DrawRect(0, 0, w, h )
+            surface.SetDrawColor( 219,219,219,105)       
+            surface.DrawOutlinedRect( 0, 0, w, h )
+        end
     end
 
     local chatTypePanel = vgui.Create("Panel", chatBarPanel)
     chatTypePanel:SetSize(chatBarPanel:GetWide(), 25)
     chatTypePanel:SetPos(0, 0)
     function chatTypePanel:Paint( w, h )
-        surface.SetDrawColor(20,20,20, 0)
-        surface.DrawRect(0, 0, w, h )
+        if hasOpenedPanel then
+            surface.SetDrawColor(20,20,20, 0)
+            surface.DrawRect(0, 0, w, h )
 
-        if chatType == "Global" then
-            draw.DrawText(chatType, "sChat_18", 4, 3, colors.globalChat, TEXT_ALIGN_LEFT)
-        elseif chatType == "Local" then
-            draw.DrawText(chatType, "sChat_18", 4, 3, colors.localChat, TEXT_ALIGN_LEFT)
-        elseif chatType == "DM" then
-            draw.DrawText(chatType, "sChat_18", 4, 3, colors.dmChat, TEXT_ALIGN_LEFT)
-        elseif chatType == "Trade" then
-            draw.DrawText(chatType, "sChat_18", 4, 3, colors.tradeChat, TEXT_ALIGN_LEFT)
-        elseif chatType == "Admin" then
-            draw.DrawText(chatType, "sChat_18", 4, 3, colors.adminChat, TEXT_ALIGN_LEFT)
-        elseif chatType == "Recruitment" then
-            draw.DrawText(chatType, "sChat_18", 4, 3, colors.recruitmentChat, TEXT_ALIGN_LEFT)
-        else
-            draw.DrawText(chatType, "sChat_18", 4, 3, colors.globalChat, TEXT_ALIGN_LEFT)
+            if chatType == "Global" then
+                draw.DrawText(chatType, "sChat_18", 4, 3, colors.globalChat, TEXT_ALIGN_LEFT)
+            elseif chatType == "Local" then
+                draw.DrawText(chatType, "sChat_18", 4, 3, colors.localChat, TEXT_ALIGN_LEFT)
+            elseif chatType == "DM" then
+                draw.DrawText(chatType, "sChat_18", 4, 3, colors.dmChat, TEXT_ALIGN_LEFT)
+            elseif chatType == "Trade" then
+                draw.DrawText(chatType, "sChat_18", 4, 3, colors.tradeChat, TEXT_ALIGN_LEFT)
+            elseif chatType == "Admin" then
+                draw.DrawText(chatType, "sChat_18", 4, 3, colors.adminChat, TEXT_ALIGN_LEFT)
+            elseif chatType == "Recruitment" then
+                draw.DrawText(chatType, "sChat_18", 4, 3, colors.recruitmentChat, TEXT_ALIGN_LEFT)
+            else
+                draw.DrawText(chatType, "sChat_18", 4, 3, colors.globalChat, TEXT_ALIGN_LEFT)
+            end
         end
     end
 
@@ -133,12 +140,14 @@ local function ChatBoxPanel()
     chatEntryPanel:RequestFocus()
 
     function chatEntryPanel:Paint( w, h )
-        surface.SetDrawColor(20,20,20, 126)
-        surface.DrawRect(0, 0, w, h )
-        --derma.SkinHook( "Paint", "TextEntry", self, w, h )
-        surface.SetDrawColor( 219,219,219,105)       
-        surface.DrawOutlinedRect( 0, 0, w, h )
-        self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
+        if hasOpenedPanel then
+            surface.SetDrawColor(20,20,20, 126)
+            surface.DrawRect(0, 0, w, h )
+            --derma.SkinHook( "Paint", "TextEntry", self, w, h )
+            surface.SetDrawColor( 219,219,219,105)       
+            surface.DrawOutlinedRect( 0, 0, w, h )
+            self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
+        end
     end
 
     chatEntryPanel.OnTextChanged = function( self )
@@ -192,9 +201,16 @@ local function ChatBoxPanel()
 
                 net.Start("SendChat")
                     net.WriteString(sanitizedInput)
-                    net.WriteString(sChat.ChatType)
+                    net.WriteString(chatType)
                     net.WriteString(target)
                 net.SendToServer()
+                frame:SetAlpha(255)
+                frame:AlphaTo(0, 0.1)
+                timer.Create("frameFaded", 0.1, 0, function()
+                    frame:Close()
+                    hasOpenedPanel = false
+                    timer.Remove("frameFaded")
+                end)
 			end
 		end
     end
@@ -208,7 +224,7 @@ local function ChatBoxPanel()
             gui.HideGameUI()
             frame:SetAlpha(255)
             frame:AlphaTo(0, 0.1)
-            timer.Create("frameFaded", 0.2, 0, function()
+            timer.Create("frameFaded", 0.1, 0, function()
                 self:Close()
                 hasOpenedPanel = false
                 timer.Remove("frameFaded")
