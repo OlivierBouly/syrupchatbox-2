@@ -66,3 +66,38 @@ function sendToServer(msgType, text, channel, target)
 	net.SendToServer()
 
 end
+
+sChat.frame = {}
+
+function sChat.frame:Init()
+    self:SetText_Base( "" )
+	self:SetText( "Time for something different!" )
+end
+
+function schat.frame:Paint( aWide, aTall )
+    
+	local TextX, TextY = 0, 0
+	local TextColor = Color( 255, 0, 0, 255 )
+
+	surface.SetFont( self:GetFont() or "default" )
+	surface.SetTextColor( TextColor )
+	surface.SetTextPos( TextX, TextY )
+	surface.DrawText( self:GetText() )
+
+end
+
+schat.frame.SetText_Base = FindMetaTable( "Panel" ).SetText
+
+function schat.frame:SetText( aText ) 
+
+	self.Text = tostring( aText ) 
+
+end
+
+function schat.frame:GetText() 
+
+	return self.Text or "" 
+
+end
+
+vgui.Register( "NewPanel", schat.frame, "DLabel" )
