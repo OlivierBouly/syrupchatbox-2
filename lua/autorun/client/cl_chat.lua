@@ -67,37 +67,25 @@ function sendToServer(msgType, text, channel, target)
 
 end
 
-sChat.frame = {}
+local function ChatBoxPanel()
 
-function sChat.frame:Init()
-    self:SetText_Base( "" )
-	self:SetText( "Time for something different!" )
-end
-
-function schat.frame:Paint( aWide, aTall )
-    
-	local TextX, TextY = 0, 0
-	local TextColor = Color( 255, 0, 0, 255 )
-
-	surface.SetFont( self:GetFont() or "default" )
-	surface.SetTextColor( TextColor )
-	surface.SetTextPos( TextX, TextY )
-	surface.DrawText( self:GetText() )
+    local frame = vgui.Create( "DFrame" )
+    frame:SetSize(ScrW() * 0.18, ScrH() * 0.25)
+    frame:SetTitle("")
+    frame:ShowCloseButton(true) //temp
+    frame:SetVisible(true)
+    frame:SetPos(ScrW() * 0.05, ScrH() * 0.4)
+    frame:UseDown = true
+    frame:SetDraggable(false)
+    frame:SetAlpha(0)
+    frame:AlphaTo(255, 0.3)
+    frame:MakePopup()
+    local DoClose = false 
 
 end
 
-schat.frame.SetText_Base = FindMetaTable( "Panel" ).SetText
+concommand.Add("test_ui", function()
 
-function schat.frame:SetText( aText ) 
+    sChat.frame:Paint(200, 200)
 
-	self.Text = tostring( aText ) 
-
-end
-
-function schat.frame:GetText() 
-
-	return self.Text or "" 
-
-end
-
-vgui.Register( "NewPanel", schat.frame, "DLabel" )
+end)
