@@ -156,14 +156,17 @@ local function ChatBoxPanel()
 	end
 
 
-    function frame:OnKeyCodePressed(code)
+    function chatEntryPanel.OnKeyCodeTyped(self, code)
         if code == KEY_TAB then
-            typeSelector = (typeSelector and typeSelector + 1) or 1
+            
+            typeSelector = (typeSelector and typeSelector + 1) or 2
             if typeSelector > 6 then typeSelector = 1 end
             if typeSelector < 1 then typeSelector = 6 end
             chatType = chatTypes[typeSelector]
             lastChatType = chatType
+
             timer.Simple(0.001, function() chatEntryPanel:RequestFocus() end)
+
         elseif code == KEY_ENTER then
 			
             local target = ""
@@ -173,18 +176,18 @@ local function ChatBoxPanel()
 			-- Replicate the client pressing enter
 			if string.Trim( sanitizedInput ) != "" then
 				if chatType == chatTypes[2] then
-					sChat.temp.lastChatType = "Local"
+					lastChatType = "Local"
 				elseif chatType == chatTypes[3] then
-					sChat.temp.lastChatType = "DM"
+					lastChatType = "DM"
                     target = "123"
                 elseif chatType == chatTypes[4] then
-					sChat.temp.lastChatType = "Admin"
+					lastChatType = "Admin"
                 elseif chatType == chatTypes[5] then
-					sChat.temp.lastChatType = "Trade"
+					lastChatType = "Trade"
                 elseif chatType == chatTypes[6] then
-					sChat.temp.lastChatType = "Recruitment"
+					lastChatType = "Recruitment"
 				else
-					sChat.temp.lastChatType = "Global"
+					lastChatType = "Global"
 				end
 
                 net.Start("SendChat")
