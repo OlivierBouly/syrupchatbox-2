@@ -19,15 +19,12 @@ function PlayerCanSeeChat(chatType, listener, speaker)
         return false
     end
     if( chatType == "global" ) then
-        print("Everyone can hear global")
         return true
     end
     if chatType == "dm" then
         if listener:Name() == target:Name() then
-            print("yes")
             return true
         end
-        print("no")
         return false
     end
 end    

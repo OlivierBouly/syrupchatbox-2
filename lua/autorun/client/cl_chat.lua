@@ -72,7 +72,7 @@ local function ChatBoxPanel()
     local frame = vgui.Create( "DFrame" )
     frame:SetSize(ScrW() * 0.25, ScrH() * 0.4)
     frame:SetTitle("")
-    frame:ShowCloseButton(true) //temp
+    frame:ShowCloseButton(false) //temp
     frame:SetVisible(true)
     frame:SetPos(ScrW() * 0.005, ScrH() * 0.5)
     frame.UseDown = true
@@ -149,6 +149,18 @@ local function ChatBoxPanel()
             self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
         end
     end
+
+    local chatLogPanel = vgui.Create("Panel", frame)
+    chatLogPanel:SetSize(frame:GetWide(), frame:GetTall() - chatBarPanel:GetTall())
+    chatLogPanel:SetPos(0, 0)
+
+    function chatLogPanel:Paint( w, h )
+        if hasOpenedPanel then
+            surface.SetDrawColor(20,20,20, 0)
+            surface.DrawRect(0, 0, w, h )
+        end
+    end    
+
 
     chatEntryPanel.OnTextChanged = function( self )
 		if self and self.GetText then 
