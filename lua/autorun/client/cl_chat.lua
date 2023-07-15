@@ -96,12 +96,12 @@ local function ChatBoxPanel()
     function chatBarPanel:Paint( w, h )
         surface.SetDrawColor(20,20,20, 10)
         surface.DrawRect(0, 0, w, h )
-        surface.SetDrawColor( 219,219,219,178)       
+        surface.SetDrawColor( 219,219,219,105)       
         surface.DrawOutlinedRect( 0, 0, w, h )
     end
 
     local chatTypePanel = vgui.Create("Panel", chatBarPanel)
-    chatTypePanel:SetSize(chatBarPanel:GetWide(), 20)
+    chatTypePanel:SetSize(chatBarPanel:GetWide(), 25)
     chatTypePanel:SetPos(0, 0)
     function chatTypePanel:Paint( w, h )
         surface.SetDrawColor(20,20,20, 0)
@@ -124,6 +124,38 @@ local function ChatBoxPanel()
         end
     end
 
+    local chatEntryPanel = vgui.Create("DTextEntry", chatBarPanel)
+    chatEntryPanel:SetSize(chatBarPanel:GetWide(), 25)
+    chatEntryPanel:SetPos(0, 25)
+    chatEntryPanel:SetTextColor(Color(255, 255, 255))
+    chatEntryPanel:SetFont("sChat_18")
+    chatEntryPanel:SetHighlightColor( Color(52, 152, 219) )
+    chatEntryPanel:RequestFocus()
+
+    function chatEntryPanel:Paint( w, h )
+        surface.SetDrawColor(20,20,20, 126)
+        surface.DrawRect(0, 0, w, h )
+        --derma.SkinHook( "Paint", "TextEntry", self, w, h )
+        surface.SetDrawColor( 219,219,219,105)       
+        surface.DrawOutlinedRect( 0, 0, w, h )
+        self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
+    end
+
+    chatEntryPanel.OnTextChanged = function( self )
+		if self and self.GetText then 
+			gamemode.Call( "ChatTextChanged", self:GetText() or "" )
+		end
+		local currentText = self:GetText()
+		local maxCharacterLimit = 200
+		if #currentText > maxCharacterLimit then
+			-- Truncate the text to the maximum character limit
+			self:SetText(string.sub(currentText, 1, maxCharacterLimit))
+			self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
+			self:RequestFocus() -- Request focus to maintain cursor position
+		end
+	end
+
+
     function frame:OnKeyCodePressed(code)
         if code == KEY_TAB then
             typeSelector = (typeSelector and typeSelector + 1) or 1
@@ -131,7 +163,37 @@ local function ChatBoxPanel()
             if typeSelector < 1 then typeSelector = 6 end
             chatType = chatTypes[typeSelector]
             lastChatType = chatType
-        end
+            timer.Simple(0.001, function() chatEntryPanel:RequestFocus() end)
+        elseif code == KEY_ENTER then
+			
+            local target = ""
+
+			local sanitizedInput = string.gsub(self:GetText(), '[\\:%*%?%z%c"<>|]', '')
+
+			-- Replicate the client pressing enter
+			if string.Trim( sanitizedInput ) != "" then
+				if chatType == chatTypes[2] then
+					sChat.temp.lastChatType = "Local"
+				elseif chatType == chatTypes[3] then
+					sChat.temp.lastChatType = "DM"
+                    target = "123"
+                elseif chatType == chatTypes[4] then
+					sChat.temp.lastChatType = "Admin"
+                elseif chatType == chatTypes[5] then
+					sChat.temp.lastChatType = "Trade"
+                elseif chatType == chatTypes[6] then
+					sChat.temp.lastChatType = "Recruitment"
+				else
+					sChat.temp.lastChatType = "Global"
+				end
+
+                net.Start("SendChat")
+                    net.WriteString(sanitizedInput)
+                    net.WriteString(sChat.ChatType)
+                    net.WriteString(target)
+                net.SendToServer()
+			end
+		end
     end
 
     function frame:Think()
