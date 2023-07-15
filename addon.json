@@ -1,0 +1,12 @@
+{
+    "title": "Syrup Chatbox",
+    "description": "",
+    "type": "servercontent",
+    "tags": [
+        "fun"
+    ],
+    "ignore": [
+        ".git/*",
+        "README.md"
+    ]
+}
