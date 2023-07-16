@@ -22,12 +22,14 @@ local gradient3 = Material("vgui/gradient_down")
 
 local hasOpenedPanel = false
 local chatMode = false
-
 local chatType = "Global"
 local chatTypes = {"Global", "Local", "DM", "Admin", "Trade", "Recruitment"}
 
 local chatLogPanel = {}
 local frame = {}
+local chatEntryPanel = {}
+local chatTypePanel = {}
+local chatBarPanel = {}
 
 local lastChatType = ""
 
@@ -73,23 +75,23 @@ local function IsPlayerInPropMenu()
     return IsValid(g_SpawnMenu) and g_SpawnMenu:IsVisible()
 end
 
-local function ChatBoxPanel()
-    frame = vgui.Create( "DFrame" )
-    frame:SetSize(ScrW() * 0.25, ScrH() * 0.4)
-    frame:SetTitle("")
-    frame:ShowCloseButton(false) //temp
-    frame:SetPos(ScrW() * 0.005, ScrH() * 0.5)
-    frame.UseDown = true
-    frame:SetDraggable(false)
-    if hasOpenedPanel then
+local function ChatBoxPanel(first)
+
+    if first then
+        frame = vgui.Create( "DFrame" )
+        frame:SetSize(ScrW() * 0.25, ScrH() * 0.4)
+        frame:SetTitle("")
+        frame:ShowCloseButton(false) //temp
+        frame:SetPos(ScrW() * 0.005, ScrH() * 0.5)
+        frame.UseDown = true
+        frame:SetDraggable(false)
         frame:SetVisible(true)
+    end
+
+    if hasOpenedPanel then
         frame:MakePopup()
-        frame:SetAlpha(0)
-        frame:AlphaTo(255, 0.1)
     end
     local DoClose = false
-
-    if not frame then return end
 
     function frame:Paint( w, h )
         surface.SetDrawColor( 20,20,20, 0)
@@ -99,32 +101,26 @@ local function ChatBoxPanel()
             surface.DrawOutlinedRect( 0, 0, w, h )
         end
     end
+    if first then
+        chatBarPanel = vgui.Create("Panel", frame)
+        chatBarPanel:SetSize(frame:GetWide(), 50)
+        chatBarPanel:SetPos(0, frame:GetTall() - 50)
+    end    
 
-    local chatBarPanel = vgui.Create("Panel", frame)
-    chatBarPanel:SetSize(frame:GetWide(), 50)
-    chatBarPanel:SetPos(0, frame:GetTall() - 50)
-    if hasOpenedPanel then
-        chatBarPanel:SetVisible(true)
-    else
-        chatBarPanel:SetVisible(false) 
-    end
     function chatBarPanel:Paint( w, h )
+        if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 10)
             surface.DrawRect(0, 0, w, h )
-            if hasOpenedPanel then
-                surface.SetDrawColor( 219,219,219,105)       
-                surface.DrawOutlinedRect( 0, 0, w, h )
-            end
+            surface.SetDrawColor( 219,219,219,105)       
+            surface.DrawOutlinedRect( 0, 0, w, h )
+        end
+    end
+    if first then
+        chatTypePanel = vgui.Create("Panel", chatBarPanel)
+        chatTypePanel:SetSize(chatBarPanel:GetWide(), 25)
+        chatTypePanel:SetPos(0, 0)
     end
 
-    local chatTypePanel = vgui.Create("Panel", chatBarPanel)
-    chatTypePanel:SetSize(chatBarPanel:GetWide(), 25)
-    chatTypePanel:SetPos(0, 0)
-    if hasOpenedPanel then
-        chatTypePanel:SetVisible(true)
-    else
-        chatTypePanel:SetVisible(false) 
-    end
     function chatTypePanel:Paint( w, h )
         if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 0)
@@ -147,19 +143,18 @@ local function ChatBoxPanel()
             end
         end
     end
-
-    local chatEntryPanel = vgui.Create("DTextEntry", chatBarPanel)
-    chatEntryPanel:SetSize(chatBarPanel:GetWide(), 25)
-    chatEntryPanel:SetPos(0, 25)
-    chatEntryPanel:SetTextColor(Color(255, 255, 255))
-    chatEntryPanel:SetFont("sChat_18")
-    chatEntryPanel:SetHighlightColor( Color(52, 152, 219) )
-
+    if first then
+        chatEntryPanel = vgui.Create("DTextEntry", chatBarPanel)
+        chatEntryPanel:SetSize(chatBarPanel:GetWide(), 25)
+        chatEntryPanel:SetPos(0, 25)
+        chatEntryPanel:SetTextColor(Color(255, 255, 255))
+        chatEntryPanel:SetFont("sChat_18")
+        chatEntryPanel:SetHighlightColor( Color(52, 152, 219) )
+    end
     if hasOpenedPanel then
-        chatTypePanel:SetVisible(true)
         chatEntryPanel:RequestFocus()
     else
-        chatTypePanel:SetVisible(false) 
+
     end
 
     function chatEntryPanel:Paint( w, h )
@@ -167,24 +162,24 @@ local function ChatBoxPanel()
             surface.SetDrawColor(20,20,20, 126)
             surface.DrawRect(0, 0, w, h )
             --derma.SkinHook( "Paint", "TextEntry", self, w, h )
-            if hasOpenedPanel then
-                surface.SetDrawColor( 219,219,219,105)       
-                surface.DrawOutlinedRect( 0, 0, w, h )
-                self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
-            end
+            surface.SetDrawColor( 219,219,219,105)       
+            surface.DrawOutlinedRect( 0, 0, w, h )
+            self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
         end
     end
-
-    chatLogPanel = vgui.Create("Panel", frame)
-    chatLogPanel:SetSize(frame:GetWide(), frame:GetTall() - chatBarPanel:GetTall())
-    chatLogPanel:SetPos(0, 0)
-
+    if first then
+        chatLogPanel = vgui.Create("Panel", frame)
+        chatLogPanel:SetSize(frame:GetWide(), frame:GetTall() - chatBarPanel:GetTall())
+        chatLogPanel:SetPos(0, 0)
+    end
     function chatLogPanel:Paint( w, h )
         if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 0)
             surface.DrawRect(0, 0, w, h )
         end
-    end    
+    end
+
+
 
     if hasOpenedPanel then
         chatEntryPanel.OnTextChanged = function( self )
@@ -237,10 +232,7 @@ local function ChatBoxPanel()
                     if self:GetText() ~= nil then
                         sendToServer("SendChat", sanitizedInput, chatType, target)
                     end
-                    frame:SetAlpha(255)
-                    frame:AlphaTo(0, 0.1)
                     timer.Create("frameFaded", 0.1, 0, function()
-                        frame:Close()
                         hasOpenedPanel = false
 
                         frame:SetMouseInputEnabled( false )
@@ -259,30 +251,21 @@ local function ChatBoxPanel()
                 self.UseDown = false
                 return
             elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) and frame ~= nil then
-    
                 gui.HideGameUI()
-                frame:SetAlpha(255)
-                frame:AlphaTo(0, 0.1)
-                timer.Create("frameFaded", 0.1, 0, function()
-                    self:Close()
-                    hasOpenedPanel = false
+
+                hasOpenedPanel = false
     
-                    frame:SetMouseInputEnabled( false )
-                    frame:SetKeyboardInputEnabled( false )
-                    gui.EnableScreenClicker( false )
+                frame:SetMouseInputEnabled( false )
+                frame:SetKeyboardInputEnabled( false )
+                gui.EnableScreenClicker( false )
     
-                    timer.Remove("frameFaded")
-                end)
+
             end
         end
     end
 end
 
 function AddChatMessage(sender, text, chatType)
-
-    if not chatLogPanel then
-        ChatBoxPanel()
-    end
 
     local typeColor = Color(0, 0, 0)
     
@@ -337,10 +320,7 @@ function AddChatMessage(sender, text, chatType)
     end
 
     chatTxt.PerformLayout = function (self)
-
         self:SetFontInternal("sChat_18")
-        --self:SetWrap(true)
-        
     end
 end
 
@@ -349,7 +329,7 @@ timer.Create("ChatBoxPanel", 0, 0, function()
     if input.IsKeyDown(KEY_Y) and not hasOpenedPanel then
         hasOpenedPanel = true
         DoClose = false
-        ChatBoxPanel()
+        ChatBoxPanel(false)
     end
 end)
 
@@ -381,8 +361,10 @@ net.Receive("ReceiveChat", function(len)
         AddChatMessage(plyName, text, chatType)
     else
         hasOpenedPanel = false
-        ChatBoxPanel()
+        ChatBoxPanel(false)
 
         AddChatMessage(plyName, text, chatType)
     end
 end)
+
+ChatBoxPanel(true)
