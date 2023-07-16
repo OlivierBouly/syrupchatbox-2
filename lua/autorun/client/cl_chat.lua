@@ -7,7 +7,7 @@ if SERVER then
     return
 end
 
-local colors = {
+local colours = {
     globalChat = Color(0,255,160),
     localChat = Color(214, 164, 56),
     dmChat = Color(186, 238, 238),
@@ -29,6 +29,8 @@ local chatTypes = {"Global", "Local", "DM", "Admin", "Trade", "Recruitment"}
 local chatLogPanel = {}
 
 local lastChatType = ""
+
+local lastMessage = {}
 
 surface.CreateFont( "sChat_18", {
     font = "Roboto Lt",
@@ -87,7 +89,7 @@ local function ChatBoxPanel()
     if not frame then return end
 
     function frame:Paint( w, h )
-        if hasOpenedPanel then
+        if chatMode then
             surface.SetDrawColor( 20,20,20, 0)
             surface.DrawRect( 0, 0, w, h )
             surface.SetDrawColor( 219,219,219,178)       
@@ -99,7 +101,7 @@ local function ChatBoxPanel()
     chatBarPanel:SetSize(frame:GetWide(), 50)
     chatBarPanel:SetPos(0, frame:GetTall() - 50)
     function chatBarPanel:Paint( w, h )
-        if hasOpenedPanel then
+        if chatMode then
             surface.SetDrawColor(20,20,20, 10)
             surface.DrawRect(0, 0, w, h )
             surface.SetDrawColor( 219,219,219,105)       
@@ -111,24 +113,24 @@ local function ChatBoxPanel()
     chatTypePanel:SetSize(chatBarPanel:GetWide(), 25)
     chatTypePanel:SetPos(0, 0)
     function chatTypePanel:Paint( w, h )
-        if hasOpenedPanel then
+        if chatMode then
             surface.SetDrawColor(20,20,20, 0)
             surface.DrawRect(0, 0, w, h )
 
             if chatType == "Global" then
-                draw.DrawText(chatType, "sChat_18", 4, 3, colors.globalChat, TEXT_ALIGN_LEFT)
+                draw.DrawText(chatType, "sChat_18", 4, 3, colours.globalChat, TEXT_ALIGN_LEFT)
             elseif chatType == "Local" then
-                draw.DrawText(chatType, "sChat_18", 4, 3, colors.localChat, TEXT_ALIGN_LEFT)
+                draw.DrawText(chatType, "sChat_18", 4, 3, colours.localChat, TEXT_ALIGN_LEFT)
             elseif chatType == "DM" then
-                draw.DrawText(chatType, "sChat_18", 4, 3, colors.dmChat, TEXT_ALIGN_LEFT)
+                draw.DrawText(chatType, "sChat_18", 4, 3, colours.dmChat, TEXT_ALIGN_LEFT)
             elseif chatType == "Trade" then
-                draw.DrawText(chatType, "sChat_18", 4, 3, colors.tradeChat, TEXT_ALIGN_LEFT)
+                draw.DrawText(chatType, "sChat_18", 4, 3, colours.tradeChat, TEXT_ALIGN_LEFT)
             elseif chatType == "Admin" then
-                draw.DrawText(chatType, "sChat_18", 4, 3, colors.adminChat, TEXT_ALIGN_LEFT)
+                draw.DrawText(chatType, "sChat_18", 4, 3, colours.adminChat, TEXT_ALIGN_LEFT)
             elseif chatType == "Recruitment" then
-                draw.DrawText(chatType, "sChat_18", 4, 3, colors.recruitmentChat, TEXT_ALIGN_LEFT)
+                draw.DrawText(chatType, "sChat_18", 4, 3, colours.recruitmentChat, TEXT_ALIGN_LEFT)
             else
-                draw.DrawText(chatType, "sChat_18", 4, 3, colors.globalChat, TEXT_ALIGN_LEFT)
+                draw.DrawText(chatType, "sChat_18", 4, 3, colours.globalChat, TEXT_ALIGN_LEFT)
             end
         end
     end
@@ -139,10 +141,12 @@ local function ChatBoxPanel()
     chatEntryPanel:SetTextColor(Color(255, 255, 255))
     chatEntryPanel:SetFont("sChat_18")
     chatEntryPanel:SetHighlightColor( Color(52, 152, 219) )
-    chatEntryPanel:RequestFocus()
+    if chatMode then
+        chatEntryPanel:RequestFocus()
+    end
 
     function chatEntryPanel:Paint( w, h )
-        if hasOpenedPanel then
+        if chatMode then
             surface.SetDrawColor(20,20,20, 126)
             surface.DrawRect(0, 0, w, h )
             --derma.SkinHook( "Paint", "TextEntry", self, w, h )
@@ -152,80 +156,82 @@ local function ChatBoxPanel()
         end
     end
 
-    local chatLogPanel = vgui.Create("Panel", frame)
+    chatLogPanel = vgui.Create("Panel", frame)
     chatLogPanel:SetSize(frame:GetWide(), frame:GetTall() - chatBarPanel:GetTall())
     chatLogPanel:SetPos(0, 0)
 
     function chatLogPanel:Paint( w, h )
-        if hasOpenedPanel then
+        if chatMode then
             surface.SetDrawColor(20,20,20, 0)
             surface.DrawRect(0, 0, w, h )
         end
     end    
 
-
-    chatEntryPanel.OnTextChanged = function( self )
-		if self and self.GetText then 
-			gamemode.Call( "ChatTextChanged", self:GetText() or "" )
-		end
-		local currentText = self:GetText()
-		local maxCharacterLimit = 200
-		if #currentText > maxCharacterLimit then
-			-- Truncate the text to the maximum character limit
-			self:SetText(string.sub(currentText, 1, maxCharacterLimit))
-			self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
-			self:RequestFocus() -- Request focus to maintain cursor position
-		end
-	end
-
-    function chatEntryPanel.OnKeyCodeTyped(self, code)
-        if code == KEY_TAB then
-            
-            typeSelector = (typeSelector and typeSelector + 1) or 2
-            if typeSelector > 6 then typeSelector = 1 end
-            if typeSelector < 1 then typeSelector = 6 end
-            chatType = chatTypes[typeSelector]
-            lastChatType = chatType
-
-            timer.Simple(0.001, function() chatEntryPanel:RequestFocus() end)
-
-        elseif code == KEY_ENTER then
-			
-            local target = ""
-
-			local sanitizedInput = string.gsub(self:GetText(), '[\\:%*%?%z%c"<>|]', '')
-
-			-- Replicate the client pressing enter
-			if string.Trim( sanitizedInput ) != "" then
-				if chatType == chatTypes[2] then
-					lastChatType = "Local"
-				elseif chatType == chatTypes[3] then
-					lastChatType = "DM"
-                    target = "123"
-                elseif chatType == chatTypes[4] then
-					lastChatType = "Admin"
-                elseif chatType == chatTypes[5] then
-					lastChatType = "Trade"
-                elseif chatType == chatTypes[6] then
-					lastChatType = "Recruitment"
-				else
-					lastChatType = "Global"
-				end
-
-                net.Start("SendChat")
-                    net.WriteString(sanitizedInput)
-                    net.WriteString(chatType)
-                    net.WriteString(target)
-                net.SendToServer()
-                frame:SetAlpha(255)
-                frame:AlphaTo(0, 0.1)
-                timer.Create("frameFaded", 0.1, 0, function()
-                    frame:Close()
-                    hasOpenedPanel = false
-                    timer.Remove("frameFaded")
-                end)
-			end
-		end
+    if chatMode then
+        chatEntryPanel.OnTextChanged = function( self )
+            if self and self.GetText then 
+                gamemode.Call( "ChatTextChanged", self:GetText() or "" )
+            end
+            local currentText = self:GetText()
+            local maxCharacterLimit = 200
+            if #currentText > maxCharacterLimit then
+                -- Truncate the text to the maximum character limit
+                self:SetText(string.sub(currentText, 1, maxCharacterLimit))
+                self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
+                if chatMode then
+                    self:RequestFocus() -- Request focus to maintain cursor position
+                end
+            end
+        end
+    
+        function chatEntryPanel.OnKeyCodeTyped(self, code)
+            if code == KEY_TAB then
+                
+                typeSelector = (typeSelector and typeSelector + 1) or 2
+                if typeSelector > 6 then typeSelector = 1 end
+                if typeSelector < 1 then typeSelector = 6 end
+                chatType = chatTypes[typeSelector]
+                lastChatType = chatType
+    
+                timer.Simple(0.001, function() if chatMode then chatEntryPanel:RequestFocus() end end)
+    
+            elseif code == KEY_ENTER then
+                
+                local target = ""
+    
+                local sanitizedInput = string.gsub(self:GetText(), '[\\:%*%?%z%c"<>|]', '')
+    
+                -- Replicate the client pressing enter
+                if string.Trim( sanitizedInput ) != "" then
+                    if chatType == chatTypes[2] then
+                        lastChatType = "Local"
+                    elseif chatType == chatTypes[3] then
+                        lastChatType = "DM"
+                        target = "123"
+                    elseif chatType == chatTypes[4] then
+                        lastChatType = "Admin"
+                    elseif chatType == chatTypes[5] then
+                        lastChatType = "Trade"
+                    elseif chatType == chatTypes[6] then
+                        lastChatType = "Recruitment"
+                    else
+                        lastChatType = "Global"
+                    end
+    
+                    if self:GetText() ~= nil then
+                        sendToServer("SendChat", sanitizedInput, chatType, target)
+                    end
+                    frame:SetAlpha(255)
+                    frame:AlphaTo(0, 0.1)
+                    timer.Create("frameFaded", 0.1, 0, function()
+                        frame:Close()
+                        hasOpenedPanel = false
+                        chatMode = false
+                        timer.Remove("frameFaded")
+                    end)
+                end
+            end
+        end
     end
 
     function frame:Think()
@@ -234,6 +240,7 @@ local function ChatBoxPanel()
             self.UseDown = false
             return
         elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) then
+            chatMode = false
             gui.HideGameUI()
             frame:SetAlpha(255)
             frame:AlphaTo(0, 0.1)
@@ -249,18 +256,76 @@ end
 function AddChatMessage(sender, text, chatType)
 
     if not chatLogPanel then
-		ChatBoxPanel()
-	end
+        ChatBoxPanel()
+    end
 
+    local typeColor = Color(0, 0, 0)
     
+    if chatType == "Global" then
+        typeColor = colours[1]
+    elseif chatType == "Local" then
+        typeColor = colours[2]
+    elseif chatType == "DM" then
+        typeColor = colours[3]
+    elseif chatType == "Trade" then
+        typeColor = colours[4]
+    elseif chatType == "Help" then
+        typeColor = colours[5]
+    elseif chatType == "Recruitment" then
+        typeColor = colours[6]
+    end
 
-end    
+    local chatParent = vgui.Create("Panel", chatLogPanel)
+    chatParent:SetSize(chatLogPanel:GetWide(), chatLogPanel:GetTall() * 0.09)
+    chatParent:Dock(TOP)
+
+    chatParent.Paint = function(self, w, h)
+
+        if sender == LocalPlayer():Nick() then
+            draw.RoundedBox( 0, 0, 0, w, h, Color( 247, 241, 241, 58) )
+        else
+            draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 44) )
+        end
+
+    end
+
+    local chatTxt = vgui.Create("RichText", chatParent)
+    chatTxt:SetContentAlignment(7)
+    chatTxt:Dock(TOP)
+    chatTxt:SetVerticalScrollbarEnabled(false)
+    chatTxt:InsertColorChange( typeColor.r, typeColor.g, typeColor.b, 255 )
+    chatTxt:SetZPos(1)
+
+    local splitSize = 58
+    local splitStrings = {}
+
+    for i = 1, #text, splitSize do
+           local substring = string.sub(text, i, i + splitSize - 1)
+        table.insert(splitStrings, substring)
+    end
+
+    for i, line in ipairs(splitStrings) do
+        if i > 1 then
+            local wLine, hLine = surface.GetTextSize(line)
+            chatTxt:SetTall(chatTxt:GetTall() + hLine)
+        end
+        chatTxt:AppendText(line)
+    end
+
+    chatTxt.PerformLayout = function (self)
+
+        self:SetFontInternal("sChat_18")
+        --self:SetWrap(true)
+        
+    end
+end
 
 timer.Create("ChatBoxPanel", 0, 0, function()
     if IsPlayerInPropMenu() or LocalPlayer():IsTyping() then return end
     if input.IsKeyDown(KEY_Y) and not hasOpenedPanel then
         ChatBoxPanel()
         hasOpenedPanel = true
+        chatMode = true
         DoClose = false
     end
 end)
@@ -282,3 +347,15 @@ hook.Add("PlayerBindPress", "overrideChatbind", function( ply, bind, pressed )
     end
     return true
 end )
+
+net.Receive("ReceiveChat", function(len)
+    local text = net.ReadString()
+    local chatType = net.ReadString()
+    local plyName = net.ReadString()
+
+	lastMessage = CurTime()
+    ChatBoxPanel()
+
+    AddChatMessage(plyName, text, chatType)
+
+end)
