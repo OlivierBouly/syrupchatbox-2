@@ -172,6 +172,11 @@ local function ChatBoxPanel(first)
         chatLogPanel:SetSize(frame:GetWide(), frame:GetTall() - chatBarPanel:GetTall())
         chatLogPanel:SetPos(0, 0)
     end
+    if hasOpenedPanel then
+        chatLogPanel:SetVerticalScrollbarEnabled(true)
+    else
+        chatLogPanel:SetVerticalScrollbarEnabled(false)
+    end
     function chatLogPanel:Paint( w, h )
         if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 0)
