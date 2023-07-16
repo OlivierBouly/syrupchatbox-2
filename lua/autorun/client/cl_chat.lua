@@ -87,14 +87,14 @@ local function ChatBoxPanel()
         frame:SetAlpha(0)
         frame:AlphaTo(255, 0.1)
     end
-    local DoClose = false 
+    local DoClose = false
 
     if not frame then return end
 
     function frame:Paint( w, h )
+        surface.SetDrawColor( 20,20,20, 0)
+        surface.DrawRect( 0, 0, w, h )
         if hasOpenedPanel then
-            surface.SetDrawColor( 20,20,20, 0)
-            surface.DrawRect( 0, 0, w, h )
             surface.SetDrawColor( 219,219,219,178)       
             surface.DrawOutlinedRect( 0, 0, w, h )
         end
@@ -103,18 +103,28 @@ local function ChatBoxPanel()
     local chatBarPanel = vgui.Create("Panel", frame)
     chatBarPanel:SetSize(frame:GetWide(), 50)
     chatBarPanel:SetPos(0, frame:GetTall() - 50)
+    if hasOpenedPanel then
+        chatBarPanel:SetVisible(true)
+    else
+        chatBarPanel:SetVisible(false) 
+    end
     function chatBarPanel:Paint( w, h )
-        if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 10)
             surface.DrawRect(0, 0, w, h )
-            surface.SetDrawColor( 219,219,219,105)       
-            surface.DrawOutlinedRect( 0, 0, w, h )
-        end
+            if hasOpenedPanel then
+                surface.SetDrawColor( 219,219,219,105)       
+                surface.DrawOutlinedRect( 0, 0, w, h )
+            end
     end
 
     local chatTypePanel = vgui.Create("Panel", chatBarPanel)
     chatTypePanel:SetSize(chatBarPanel:GetWide(), 25)
     chatTypePanel:SetPos(0, 0)
+    if hasOpenedPanel then
+        chatTypePanel:SetVisible(true)
+    else
+        chatTypePanel:SetVisible(false) 
+    end
     function chatTypePanel:Paint( w, h )
         if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 0)
@@ -144,8 +154,12 @@ local function ChatBoxPanel()
     chatEntryPanel:SetTextColor(Color(255, 255, 255))
     chatEntryPanel:SetFont("sChat_18")
     chatEntryPanel:SetHighlightColor( Color(52, 152, 219) )
+
     if hasOpenedPanel then
+        chatTypePanel:SetVisible(true)
         chatEntryPanel:RequestFocus()
+    else
+        chatTypePanel:SetVisible(false) 
     end
 
     function chatEntryPanel:Paint( w, h )
@@ -153,9 +167,11 @@ local function ChatBoxPanel()
             surface.SetDrawColor(20,20,20, 126)
             surface.DrawRect(0, 0, w, h )
             --derma.SkinHook( "Paint", "TextEntry", self, w, h )
-            surface.SetDrawColor( 219,219,219,105)       
-            surface.DrawOutlinedRect( 0, 0, w, h )
-            self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
+            if hasOpenedPanel then
+                surface.SetDrawColor( 219,219,219,105)       
+                surface.DrawOutlinedRect( 0, 0, w, h )
+                self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
+            end
         end
     end
 
@@ -242,7 +258,7 @@ local function ChatBoxPanel()
             if self.UseDown and not input.IsKeyDown(KEY_Y) then
                 self.UseDown = false
                 return
-            elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) then
+            elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) and frame ~= nil then
     
                 gui.HideGameUI()
                 frame:SetAlpha(255)
@@ -300,7 +316,6 @@ function AddChatMessage(sender, text, chatType)
 
     local chatTxt = vgui.Create("RichText", chatParent)
     chatTxt:SetContentAlignment(7)
-    chatTxt:Dock(TOP)
     chatTxt:SetVerticalScrollbarEnabled(false)
     chatTxt:InsertColorChange( typeColor.r, typeColor.g, typeColor.b, 255 )
     chatTxt:SetZPos(1)
@@ -362,9 +377,12 @@ net.Receive("ReceiveChat", function(len)
     local plyName = net.ReadString()
 
 	lastMessage = CurTime()
-    hasOpenedPanel = false
-    ChatBoxPanel()
+    if hasOpenedPanel then
+        AddChatMessage(plyName, text, chatType)
+    else
+        hasOpenedPanel = false
+        ChatBoxPanel()
 
-    AddChatMessage(plyName, text, chatType)
-
+        AddChatMessage(plyName, text, chatType)
+    end
 end)
