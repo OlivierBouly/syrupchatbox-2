@@ -26,6 +26,8 @@ local chatMode = false
 local chatType = "Global"
 local chatTypes = {"Global", "Local", "DM", "Admin", "Trade", "Recruitment"}
 
+local chatLogPanel = {}
+
 local lastChatType = ""
 
 surface.CreateFont( "sChat_18", {
@@ -176,7 +178,6 @@ local function ChatBoxPanel()
 		end
 	end
 
-
     function chatEntryPanel.OnKeyCodeTyped(self, code)
         if code == KEY_TAB then
             
@@ -244,6 +245,16 @@ local function ChatBoxPanel()
         end
     end
 end
+
+function AddChatMessage(sender, text, chatType)
+
+    if not chatLogPanel then
+		ChatBoxPanel()
+	end
+
+    
+
+end    
 
 timer.Create("ChatBoxPanel", 0, 0, function()
     if IsPlayerInPropMenu() or LocalPlayer():IsTyping() then return end
