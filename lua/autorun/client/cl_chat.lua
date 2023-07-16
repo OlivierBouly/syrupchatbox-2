@@ -27,6 +27,7 @@ local chatType = "Global"
 local chatTypes = {"Global", "Local", "DM", "Admin", "Trade", "Recruitment"}
 
 local chatLogPanel = {}
+local frame = {}
 
 local lastChatType = ""
 
@@ -73,23 +74,25 @@ local function IsPlayerInPropMenu()
 end
 
 local function ChatBoxPanel()
-    local frame = vgui.Create( "DFrame" )
+    frame = vgui.Create( "DFrame" )
     frame:SetSize(ScrW() * 0.25, ScrH() * 0.4)
     frame:SetTitle("")
     frame:ShowCloseButton(false) //temp
-    frame:SetVisible(true)
     frame:SetPos(ScrW() * 0.005, ScrH() * 0.5)
     frame.UseDown = true
     frame:SetDraggable(false)
-    frame:SetAlpha(0)
-    frame:AlphaTo(255, 0.1)
-    frame:MakePopup()
+    if hasOpenedPanel then
+        frame:SetVisible(true)
+        frame:MakePopup()
+        frame:SetAlpha(0)
+        frame:AlphaTo(255, 0.1)
+    end
     local DoClose = false 
 
     if not frame then return end
 
     function frame:Paint( w, h )
-        if chatMode then
+        if hasOpenedPanel then
             surface.SetDrawColor( 20,20,20, 0)
             surface.DrawRect( 0, 0, w, h )
             surface.SetDrawColor( 219,219,219,178)       
@@ -101,7 +104,7 @@ local function ChatBoxPanel()
     chatBarPanel:SetSize(frame:GetWide(), 50)
     chatBarPanel:SetPos(0, frame:GetTall() - 50)
     function chatBarPanel:Paint( w, h )
-        if chatMode then
+        if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 10)
             surface.DrawRect(0, 0, w, h )
             surface.SetDrawColor( 219,219,219,105)       
@@ -113,7 +116,7 @@ local function ChatBoxPanel()
     chatTypePanel:SetSize(chatBarPanel:GetWide(), 25)
     chatTypePanel:SetPos(0, 0)
     function chatTypePanel:Paint( w, h )
-        if chatMode then
+        if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 0)
             surface.DrawRect(0, 0, w, h )
 
@@ -141,12 +144,12 @@ local function ChatBoxPanel()
     chatEntryPanel:SetTextColor(Color(255, 255, 255))
     chatEntryPanel:SetFont("sChat_18")
     chatEntryPanel:SetHighlightColor( Color(52, 152, 219) )
-    if chatMode then
+    if hasOpenedPanel then
         chatEntryPanel:RequestFocus()
     end
 
     function chatEntryPanel:Paint( w, h )
-        if chatMode then
+        if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 126)
             surface.DrawRect(0, 0, w, h )
             --derma.SkinHook( "Paint", "TextEntry", self, w, h )
@@ -161,13 +164,13 @@ local function ChatBoxPanel()
     chatLogPanel:SetPos(0, 0)
 
     function chatLogPanel:Paint( w, h )
-        if chatMode then
+        if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 0)
             surface.DrawRect(0, 0, w, h )
         end
     end    
 
-    if chatMode then
+    if hasOpenedPanel then
         chatEntryPanel.OnTextChanged = function( self )
             if self and self.GetText then 
                 gamemode.Call( "ChatTextChanged", self:GetText() or "" )
@@ -178,9 +181,6 @@ local function ChatBoxPanel()
                 -- Truncate the text to the maximum character limit
                 self:SetText(string.sub(currentText, 1, maxCharacterLimit))
                 self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
-                if chatMode then
-                    self:RequestFocus() -- Request focus to maintain cursor position
-                end
             end
         end
     
@@ -193,7 +193,7 @@ local function ChatBoxPanel()
                 chatType = chatTypes[typeSelector]
                 lastChatType = chatType
     
-                timer.Simple(0.001, function() if chatMode then chatEntryPanel:RequestFocus() end end)
+                timer.Simple(0.001, function() if hasOpenedPanel then chatEntryPanel:RequestFocus() end end)
     
             elseif code == KEY_ENTER then
                 
@@ -226,29 +226,38 @@ local function ChatBoxPanel()
                     timer.Create("frameFaded", 0.1, 0, function()
                         frame:Close()
                         hasOpenedPanel = false
-                        chatMode = false
+
+                        frame:SetMouseInputEnabled( false )
+                        frame:SetKeyboardInputEnabled( false )
+                        gui.EnableScreenClicker( false )
+
                         timer.Remove("frameFaded")
                     end)
                 end
             end
         end
-    end
+        function frame:Think()
 
-    function frame:Think()
-        if IsPlayerInPropMenu() then return end
-        if self.UseDown and not input.IsKeyDown(KEY_Y) then
-            self.UseDown = false
-            return
-        elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) then
-            chatMode = false
-            gui.HideGameUI()
-            frame:SetAlpha(255)
-            frame:AlphaTo(0, 0.1)
-            timer.Create("frameFaded", 0.1, 0, function()
-                self:Close()
-                hasOpenedPanel = false
-                timer.Remove("frameFaded")
-            end)
+            if IsPlayerInPropMenu() then return end
+            if self.UseDown and not input.IsKeyDown(KEY_Y) then
+                self.UseDown = false
+                return
+            elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) then
+    
+                gui.HideGameUI()
+                frame:SetAlpha(255)
+                frame:AlphaTo(0, 0.1)
+                timer.Create("frameFaded", 0.1, 0, function()
+                    self:Close()
+                    hasOpenedPanel = false
+    
+                    frame:SetMouseInputEnabled( false )
+                    frame:SetKeyboardInputEnabled( false )
+                    gui.EnableScreenClicker( false )
+    
+                    timer.Remove("frameFaded")
+                end)
+            end
         end
     end
 end
@@ -323,10 +332,9 @@ end
 timer.Create("ChatBoxPanel", 0, 0, function()
     if IsPlayerInPropMenu() or LocalPlayer():IsTyping() then return end
     if input.IsKeyDown(KEY_Y) and not hasOpenedPanel then
-        ChatBoxPanel()
         hasOpenedPanel = true
-        chatMode = true
         DoClose = false
+        ChatBoxPanel()
     end
 end)
 
@@ -354,6 +362,7 @@ net.Receive("ReceiveChat", function(len)
     local plyName = net.ReadString()
 
 	lastMessage = CurTime()
+    hasOpenedPanel = false
     ChatBoxPanel()
 
     AddChatMessage(plyName, text, chatType)

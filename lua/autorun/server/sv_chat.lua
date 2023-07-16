@@ -65,7 +65,9 @@ net.Receive("SendChat", function(len, ply)
         end
     end
 end)
+/*
 
+*/
 
 timer.Simple(10, function() 
     net.Start("ReceiveChat")
