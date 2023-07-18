@@ -327,6 +327,55 @@ function AddChatMessage(sender, text, chatType)
     chatTxt.PerformLayout = function (self)
         self:SetFontInternal("sChat_18")
     end
+
+    local chatInfo = vgui.Create("RichText", chatParent)
+    chatInfo:SetContentAlignment(7)
+    chatInfo:SetVerticalScrollbarEnabled(false)
+	chatInfo:Dock(BOTTOM)
+    chatInfo:InsertColorChange(255, 255, 255, 255)
+    chatInfo:AppendText(sender .. " * ")
+    chatInfo:InsertColorChange(typeColor.r, typeColor.g, typeColor.b, 255)
+    chatInfo:AppendText(chatType)
+    chatInfo:SetSize(chatParent:GetWide(), chatParent:GetTall() * 0.5 + 5)
+	chatInfo:SetZPos(1)
+	
+	chatInfo.PerformLayout = function(self)
+		self:SetFontInternal("sChat_16")
+	end
+
+	local coverPanel = vgui.Create("DPanel", chatParent)
+	coverPanel:SetSize(chatParent:GetWide(), chatParent:GetTall() + 20)
+	coverPanel:Dock(NODOCK)
+	coverPanel:SetZPos(10)
+
+	coverPanel.Paint = function(self, w, h)
+
+		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 255, 255, 0) )
+
+	end	
+
+	chatParent:SetTall(chatTxt:GetTall() + chatInfo:GetTall())
+
+	local spacerPanel = vgui.Create("Panel", chatLogPanel)
+	spacerPanel:SetSize(chatLogPanel:GetWide(), 10)
+	spacerPanel:Dock(TOP)
+
+	spacerPanel.Paint = function(self, w, h)
+
+		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 255, 255, 0) )
+
+	end	
+
+	chatParent.Paint = function(self, w, h)
+
+		if sender == LocalPlayer():Nick() then
+			draw.RoundedBox( 0, 0, 0, w, h, Color( 247, 241, 241, 58) )
+		else
+			draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 44) )
+		end
+
+	end
+
 end
 
 timer.Create("ChatBoxPanel", 0, 0, function()
