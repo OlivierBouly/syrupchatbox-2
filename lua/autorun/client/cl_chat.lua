@@ -246,25 +246,30 @@ local function ChatBoxPanel(first)
                     end)
                 end
             end
-        end
+        end/*
         function frame:Think()
-
             if IsPlayerInPropMenu() then return end
+        
+            if hasOpenedPanel then
+                chatEntryPanel:RequestFocus()
+            end
+        
             if self.UseDown and not input.IsKeyDown(KEY_Y) then
                 self.UseDown = false
                 return
             elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) then
-                gui.HideGameUI()
-
+                if not hasOpenedPanel then
+                    gui.HideGameUI()
+                end
+        
                 hasOpenedPanel = false
-    
-                frame:SetMouseInputEnabled( false )
-                frame:SetKeyboardInputEnabled( false )
-                gui.EnableScreenClicker( false )
-    
-
+                frame:SetMouseInputEnabled(false)
+                frame:SetKeyboardInputEnabled(false)
+                gui.EnableScreenClicker(false)
             end
         end
+*/
+
     end
 end
 
@@ -382,8 +387,6 @@ timer.Create("ChatBoxPanel", 0, 0, function()
         hasOpenedPanel = true
         DoClose = false
         ChatBoxPanel(false)
-    elseif input.IsKeyDown(KEY_ESCAPE) then
-        hasOpenedPanel = false
     end
 end)
 
