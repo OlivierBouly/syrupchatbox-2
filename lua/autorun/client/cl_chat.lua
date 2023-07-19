@@ -178,10 +178,8 @@ local function ChatBoxPanel(first)
         chatLogPanel:SetVerticalScrollbarEnabled(false)
     end
     function chatLogPanel:Paint( w, h )
-        if hasOpenedPanel then
-            surface.SetDrawColor(20,20,20, 0)
-            surface.DrawRect(0, 0, w, h )
-        end
+        surface.SetDrawColor(20,20,20, 0)
+        surface.DrawRect(0, 0, w, h )
     end
 
 
@@ -255,7 +253,7 @@ local function ChatBoxPanel(first)
             if self.UseDown and not input.IsKeyDown(KEY_Y) then
                 self.UseDown = false
                 return
-            elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) and frame ~= nil then
+            elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) then
                 gui.HideGameUI()
 
                 hasOpenedPanel = false
@@ -384,6 +382,8 @@ timer.Create("ChatBoxPanel", 0, 0, function()
         hasOpenedPanel = true
         DoClose = false
         ChatBoxPanel(false)
+    elseif input.IsKeyDown(KEY_ESCAPE) then
+        hasOpenedPanel = false
     end
 end)
 
@@ -414,7 +414,6 @@ net.Receive("ReceiveChat", function(len)
     if hasOpenedPanel then
         AddChatMessage(plyName, text, chatType)
     else
-        hasOpenedPanel = false
         ChatBoxPanel(false)
 
         AddChatMessage(plyName, text, chatType)
