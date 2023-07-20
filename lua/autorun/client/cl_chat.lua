@@ -261,7 +261,6 @@ local function ChatBoxPanel(first)
                 if not hasOpenedPanel then
                     gui.HideGameUI()
                 end
-        
                 hasOpenedPanel = false
                 frame:SetMouseInputEnabled(false)
                 frame:SetKeyboardInputEnabled(false)
