@@ -83,11 +83,11 @@ local function ChatBoxPanel(first)
         frame:SetTitle("")
         frame:ShowCloseButton(false) //temp
         frame:SetPos(ScrW() * 0.005, ScrH() * 0.5)
-        frame.UseDown = true
+        
         frame:SetDraggable(false)
         frame:SetVisible(true)
     end
-
+    frame.UseDown = true
     if hasOpenedPanel then
         frame:MakePopup()
     end
@@ -246,7 +246,7 @@ local function ChatBoxPanel(first)
                     end)
                 end
             end
-        end/*
+        end
         function frame:Think()
             if IsPlayerInPropMenu() then return end
         
@@ -257,7 +257,7 @@ local function ChatBoxPanel(first)
             if self.UseDown and not input.IsKeyDown(KEY_Y) then
                 self.UseDown = false
                 return
-            elseif not self.UseDown and input.IsKeyDown(KEY_ESCAPE) then
+            elseif input.IsKeyDown(KEY_ESCAPE) then
                 if not hasOpenedPanel then
                     gui.HideGameUI()
                 end
@@ -268,8 +268,6 @@ local function ChatBoxPanel(first)
                 gui.EnableScreenClicker(false)
             end
         end
-*/
-
     end
 end
 
