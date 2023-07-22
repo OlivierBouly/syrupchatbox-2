@@ -168,21 +168,19 @@ local function ChatBoxPanel(first)
         end
     end
     if first then
-        chatLogPanel = vgui.Create("Panel", frame)
+        chatLogPanel = vgui.Create("DPanelList", frame)
         chatLogPanel:SetSize(frame:GetWide(), frame:GetTall() - chatBarPanel:GetTall())
         chatLogPanel:SetPos(0, 0)
     end
     if hasOpenedPanel then
-        chatLogPanel:SetVerticalScrollbarEnabled(true)
+        chatLogPanel:EnableVerticalScrollbar( true )
     else
-        chatLogPanel:SetVerticalScrollbarEnabled(false)
+        chatLogPanel:EnableVerticalScrollbar( false )
     end
     function chatLogPanel:Paint( w, h )
         surface.SetDrawColor(20,20,20, 0)
         surface.DrawRect(0, 0, w, h )
     end
-
-
 
     if hasOpenedPanel then
         chatEntryPanel.OnTextChanged = function( self )
@@ -258,7 +256,7 @@ local function ChatBoxPanel(first)
                 self.UseDown = false
                 return
             elseif input.IsKeyDown(KEY_ESCAPE) then
-                if not hasOpenedPanel then
+                if hasOpenedPanel then
                     gui.HideGameUI()
                 end
                 hasOpenedPanel = false
@@ -375,14 +373,13 @@ function AddChatMessage(sender, text, chatType)
 		end
 
 	end
-
 end
 
 timer.Create("ChatBoxPanel", 0, 0, function()
     if IsPlayerInPropMenu() or LocalPlayer():IsTyping() then return end
     if input.IsKeyDown(KEY_Y) and not hasOpenedPanel then
         hasOpenedPanel = true
-        DoClose = false
+        DoClose = true
         ChatBoxPanel(false)
     end
 end)
