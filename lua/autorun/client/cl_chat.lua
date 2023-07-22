@@ -154,8 +154,6 @@ local function ChatBoxPanel(first)
     end
     if hasOpenedPanel then
         chatEntryPanel:RequestFocus()
-    else
-
     end
 
     function chatEntryPanel:Paint( w, h )
@@ -168,6 +166,27 @@ local function ChatBoxPanel(first)
             self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
         end
     end
+
+    if first then
+        chatDMTargetPanel = vgui.Create("DTextEntry", chatBarPanel)
+        chatDMTargetPanel:SetSize(chatBarPanel:GetWide() * 0.3, 25)
+        chatDMTargetPanel:SetPos(chatBarPanel:GetWide() * 0.7, 0)
+        chatDMTargetPanel:SetTextColor(Color(255, 255, 255))
+        chatDMTargetPanel:SetFont("sChat_18")
+        chatDMTargetPanel:SetHighlightColor( Color(52, 152, 219) )
+    end
+
+    function chatDMTargetPanel:Paint( w, h )
+        if hasOpenedPanel && lastChatType == "DM" then
+            surface.SetDrawColor(20,20,20, 126)
+            surface.DrawRect(0, 0, w, h )
+            --derma.SkinHook( "Paint", "TextEntry", self, w, h )
+            surface.SetDrawColor( 219,219,219,105)       
+            surface.DrawOutlinedRect( 0, 0, w, h )
+            self:DrawTextEntryText(self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor())
+        end
+    end
+
     if first then
         chatLogPanel = vgui.Create("DScrollPanel", frame)
         chatLogPanel:SetSize(frame:GetWide() + 5, frame:GetTall() - chatBarPanel:GetTall())
@@ -211,6 +230,19 @@ local function ChatBoxPanel(first)
                 self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
             end
         end
+
+        chatDMTargetPanel.OnTextChanged = function( self )
+            if self and self.GetText then 
+                gamemode.Call( "ChatTextChanged", self:GetText() or "" )
+            end
+            local currentText = self:GetText()
+            local maxCharacterLimit = 200
+            if #currentText > maxCharacterLimit then
+                -- Truncate the text to the maximum character limit
+                self:SetText(string.sub(currentText, 1, maxCharacterLimit))
+                self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
+            end
+        end
     
         function chatEntryPanel.OnKeyCodeTyped(self, code)
             if code == KEY_TAB then
@@ -220,8 +252,10 @@ local function ChatBoxPanel(first)
                 if typeSelector < 1 then typeSelector = 6 end
                 chatType = chatTypes[typeSelector]
                 lastChatType = chatType
-    
-                timer.Simple(0.001, function() if hasOpenedPanel then chatEntryPanel:RequestFocus() end end)
+
+                if lastChatType == "DM" then
+                    chatDMTargetPanel:RequestFocus()
+                end
     
             elseif code == KEY_ENTER then
                 
