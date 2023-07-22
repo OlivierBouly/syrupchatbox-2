@@ -183,21 +183,19 @@ local function ChatBoxPanel(first)
     vbar:SetHideButtons( true )
 
     function vbar.btnUp:Paint( w, h ) end
-    vbarPaint = function(self, w, h ) 
-        surface.SetDrawColor(20,20,20, 51)
-        surface.DrawRect(0, 0, w - 5, h )
-        surface.SetDrawColor( 219,219,219,105)       
-        surface.DrawOutlinedRect( 0, 0, w, h )
+    function vbar:Paint (w, h )
+        if hasOpenedPanel then
+            surface.SetDrawColor(20,20,20, 51)
+            surface.DrawRect(0, 0, w - 5, h )
+            surface.SetDrawColor( 219,219,219,105)       
+            surface.DrawOutlinedRect( 0, 0, w, h )
+        end
     end
     function vbar.btnGrip:Paint( w, h )
-        surface.SetDrawColor(255,182,24)
-        surface.DrawRect(0, 0, w - 5, h )
-    end
-
-    if hasOpenedPanel then
-        vbar.Paint = vbarPaint
-    else
-        vbar.Paint = {}
+        if hasOpenedPanel then
+            surface.SetDrawColor(255,182,24)
+            surface.DrawRect(0, 0, w - 5, h )
+        end
     end
 
     if hasOpenedPanel then
