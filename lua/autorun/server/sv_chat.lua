@@ -77,7 +77,7 @@ timer.Simple(10, function()
     net.Broadcast()
 end)
 
-timer.Create( "testTimer", 4, 20, function() 
+timer.Create( "testTimer", 2, 20, function() 
     net.Start("ReceiveChat")
         net.WriteString("lmao")
         net.WriteString("global")

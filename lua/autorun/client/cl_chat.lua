@@ -30,6 +30,7 @@ local frame = {}
 local chatEntryPanel = {}
 local chatTypePanel = {}
 local chatBarPanel = {}
+local vbarPaint = {}
 
 local lastChatType = ""
 
@@ -168,18 +169,35 @@ local function ChatBoxPanel(first)
         end
     end
     if first then
-        chatLogPanel = vgui.Create("DPanelList", frame)
-        chatLogPanel:SetSize(frame:GetWide(), frame:GetTall() - chatBarPanel:GetTall())
+        chatLogPanel = vgui.Create("DScrollPanel", frame)
+        chatLogPanel:SetSize(frame:GetWide() + 5, frame:GetTall() - chatBarPanel:GetTall())
         chatLogPanel:SetPos(0, 0)
     end
-    if hasOpenedPanel then
-        chatLogPanel:EnableVerticalScrollbar( true )
-    else
-        chatLogPanel:EnableVerticalScrollbar( false )
-    end
+
     function chatLogPanel:Paint( w, h )
         surface.SetDrawColor(20,20,20, 0)
         surface.DrawRect(0, 0, w, h )
+    end
+
+    local vbar = chatLogPanel.VBar
+    vbar:SetHideButtons( true )
+
+    function vbar.btnUp:Paint( w, h ) end
+    vbarPaint = function(self, w, h ) 
+        surface.SetDrawColor(20,20,20, 51)
+        surface.DrawRect(0, 0, w - 5, h )
+        surface.SetDrawColor( 219,219,219,105)       
+        surface.DrawOutlinedRect( 0, 0, w, h )
+    end
+    function vbar.btnGrip:Paint( w, h )
+        surface.SetDrawColor(255,182,24)
+        surface.DrawRect(0, 0, w - 5, h )
+    end
+
+    if hasOpenedPanel then
+        vbar.Paint = vbarPaint
+    else
+        vbar.Paint = {}
     end
 
     if hasOpenedPanel then
