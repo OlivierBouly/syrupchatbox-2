@@ -113,7 +113,7 @@ local function ChatBoxPanel(first)
     function chatBarPanel:Paint( w, h )
         if hasOpenedPanel then
             surface.SetDrawColor(20,20,20, 10)
-            surface.DrawRect(0, 0, w, h )
+            surface.DrawRect(0, 0, w, h ) 
             surface.SetDrawColor( 219,219,219,105)       
             surface.DrawOutlinedRect( 0, 0, w, h )
         end
