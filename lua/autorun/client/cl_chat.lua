@@ -223,6 +223,17 @@ local function ChatBoxPanel(first)
             if self and self.GetText then 
                 gamemode.Call( "ChatTextChanged", self:GetText() or "" )
             end
+            local checkCommand = string.sub(self:GetText(), 1, 3)
+            if checkCommand == "/g " then
+                lastChatType = "Global"
+                chatType = "Global"
+                self:SetText(string.sub(self:GetText(), 4))
+            elseif checkCommand == "/l " then
+                lastChatType = "Local"
+                chatType = "Local"
+                self:SetText(string.sub(self:GetText(), 4))
+            end
+
             local currentText = self:GetText()
             local maxCharacterLimit = 200
             if #currentText > maxCharacterLimit then
