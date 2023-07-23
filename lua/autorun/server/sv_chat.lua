@@ -79,10 +79,21 @@ net.Receive("SendChat", function(len, ply)
         net.Broadcast()
     elseif chatType == "Trade" then
         net.Start("ReceiveChat")
-        net.WriteString(sanitizedInput)
-        net.WriteString(chatType)
-        net.WriteString(ply:Name())
+            net.WriteString(sanitizedInput)
+            net.WriteString(chatType)
+            net.WriteString(ply:Name())
         net.Broadcast()
+    elseif chatType == "DM" then
+        local players = player.GetAll()
+        for _, plyl in ipairs(players) do
+            if plyl:Name() == target then
+                net.Start("ReceiveChat")
+                net.WriteString(sanitizedInput)
+                net.WriteString(chatType)
+                net.WriteString(ply:Name())
+            net.Send(plyl)
+            end
+        end
     end
 end)
 /*
