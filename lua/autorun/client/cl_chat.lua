@@ -74,6 +74,17 @@ if not GAMEMODE then
     return
 end
 
+local function SetFocusOnTextPanel(panel)
+    if not IsValid(panel) then return end
+
+    if panel == chatEntryPanel then
+        chatEntryPanel:KillFocus()
+    elseif panel == chatDMTargetPanel then
+        chatDMTargetPanel:KillFocus()
+    end
+    panel:RequestFocus()
+end
+
 local function IsPlayerInPropMenu()
     return IsValid(g_SpawnMenu) and g_SpawnMenu:IsVisible()
 end
@@ -282,6 +293,14 @@ local function ChatBoxPanel(first)
                 self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
             end
         end
+
+        chatEntryPanel.OnMousePressed = function()
+            SetFocusOnTextPanel(chatEntryPanel)
+        end
+        
+        chatDMTargetPanel.OnMousePressed = function()
+            SetFocusOnTextPanel(chatDMTargetPanel)
+        end
     
         function chatEntryPanel.OnKeyCodeTyped(self, code)
             if code == KEY_TAB then
@@ -293,7 +312,7 @@ local function ChatBoxPanel(first)
                 lastChatType = chatType
 
                 if lastChatType == "DM" then
-                    chatDMTargetPanel:RequestFocus()
+                    chatDMTargetPanel:RequestFocus(true)
                 end
     
             elseif code == KEY_ENTER then
@@ -327,6 +346,7 @@ local function ChatBoxPanel(first)
                     net.SendToServer()
 
                     chatEntryPanel:SetText("")
+                    chatDMTargetPanel:SetText("")
 
                     timer.Create("frameFaded", 0.1, 0, function()
                         hasOpenedPanel = false
@@ -343,7 +363,7 @@ local function ChatBoxPanel(first)
         function frame:Think()
             if IsPlayerInPropMenu() then return end
         
-            if hasOpenedPanel then
+            if hasOpenedPanel and lastChatType != "DM" then
                 chatEntryPanel:RequestFocus()
             end
         
