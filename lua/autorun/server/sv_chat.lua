@@ -21,7 +21,7 @@ function PlayerCanSeeChat(chatType, listener, speaker)
     if( chatType == "Global" ) then
         return true
     end
-    if chatType == "dm" then
+    if chatType == "DM" then
         if listener:Name() == target:Name() then
             return true
         end
@@ -85,14 +85,32 @@ net.Receive("SendChat", function(len, ply)
         net.Broadcast()
     elseif chatType == "DM" then
         local players = player.GetAll()
+        local plyFound = false
         for _, plyl in ipairs(players) do
-            if plyl:Name() == target or plyl:Name() == ply:Name() then
+            if plyl:Name() == target then
+                okyFound = true
                 net.Start("ReceiveChat")
+                    net.WriteString(sanitizedInput)
+                    net.WriteString(chatType)
+                    net.WriteString(ply:Name())
+                    net.WriteString(target)
+                net.Send(plyl)
+            end
+        end
+        if plyFound then
+            net.Start("ReceiveChat")
                 net.WriteString(sanitizedInput)
                 net.WriteString(chatType)
                 net.WriteString(ply:Name())
-            net.Send(plyl)
-            end
+                net.WriteString(target)
+            net.Send(ply)
+        else
+            net.Start("ReceiveChat")
+                net.WriteString("Target not found")
+                net.WriteString(chatType)
+                net.WriteString(ply:Name())
+                net.WriteString("unknown")
+            net.Send(ply)
         end
     end
 end)

@@ -11,9 +11,9 @@ local colours = {
     globalChat = Color(0,255,160),
     localChat = Color(214, 164, 56),
     dmChat = Color(186, 238, 238),
-    adminChat = Color(255, 165, 80),
     tradeChat = Color(119, 246, 255),
-    recruitmentChat = Color(255, 252, 80)
+    recruitmentChat = Color(255, 252, 80),
+    adminChat = Color(255, 165, 80)
 }
 
 local gradient = Material("gui/center_gradient")
@@ -23,7 +23,7 @@ local gradient3 = Material("vgui/gradient_down")
 local hasOpenedPanel = false
 local chatMode = false
 local chatType = "Global"
-local chatTypes = {"Global", "Local", "DM", "Admin", "Trade", "Recruitment"}
+local chatTypes = {"Global", "Local", "DM", "Trade", "Recruitment", "Admin"}
 
 local chatLogPanel = {}
 local frame = {}
@@ -149,10 +149,10 @@ local function ChatBoxPanel(first)
                 draw.DrawText(chatType, "sChat_18", 4, 3, colours.dmChat, TEXT_ALIGN_LEFT)
             elseif chatType == "Trade" then
                 draw.DrawText(chatType, "sChat_18", 4, 3, colours.tradeChat, TEXT_ALIGN_LEFT)
-            elseif chatType == "Admin" then
-                draw.DrawText(chatType, "sChat_18", 4, 3, colours.adminChat, TEXT_ALIGN_LEFT)
             elseif chatType == "Recruitment" then
                 draw.DrawText(chatType, "sChat_18", 4, 3, colours.recruitmentChat, TEXT_ALIGN_LEFT)
+            elseif chatType == "Admin" then
+                draw.DrawText(chatType, "sChat_18", 4, 3, colours.adminChat, TEXT_ALIGN_LEFT)
             else
                 draw.DrawText(chatType, "sChat_18", 4, 3, colours.globalChat, TEXT_ALIGN_LEFT)
             end
@@ -255,11 +255,11 @@ local function ChatBoxPanel(first)
                     lastChatType = "DM"
                     target = chatDMTargetPanel:GetText()
                 elseif chatType == chatTypes[4] then
-                    lastChatType = "Admin"
-                elseif chatType == chatTypes[5] then
                     lastChatType = "Trade"
-                elseif chatType == chatTypes[6] then
+                elseif chatType == chatTypes[5] then
                     lastChatType = "Recruitment"
+                elseif chatType == chatTypes[6] then
+                    lastChatType = "Admin"
                 else
                     lastChatType = "Global"
                 end
@@ -300,7 +300,7 @@ local function ChatBoxPanel(first)
                 lastChatType = "Local"
                 chatType = "Local"
                 self:SetText(string.sub(self:GetText(), 4))
-            elseif checkCommand == "/a " then
+            elseif checkCommand == "/a " and LocalPlayer():IsAdmin() then
                 lastChatType = "Admin"
                 chatType = "Admin"
                 self:SetText(string.sub(self:GetText(), 4))
@@ -421,7 +421,7 @@ local function AfterPanelPaint(panel)
 
 end
 
-function AddChatMessage(sender, text, chatTypeS)
+function AddChatMessage(sender, text, chatTypeS, target)
 
 	local typeColor = Color(0, 0, 0)
 	local typePretty = "idk"
@@ -492,7 +492,12 @@ function AddChatMessage(sender, text, chatTypeS)
     chatInfo:SetVerticalScrollbarEnabled(false)
 	chatInfo:Dock(BOTTOM)
     chatInfo:InsertColorChange(255, 255, 255, 255)
-    chatInfo:AppendText(sender .. " * ")
+    if chatTypeS == "DM" then
+        chatInfo:AppendText(sender .. " to " .. target .. " * ")
+    else
+        
+    end
+    
     chatInfo:InsertColorChange(typeColor.r, typeColor.g, typeColor.b, 255)
     chatInfo:AppendText(typePretty)
     chatInfo:SetSize(chatParent:GetWide(), chatParent:GetTall() * 0.5 + 5)
@@ -544,7 +549,7 @@ function AddChatMessage(sender, text, chatTypeS)
 end
 
 timer.Create("ChatBoxPanel", 0, 0, function()
-    if IsPlayerInPropMenu() or LocalPlayer():IsTyping() then return end
+    if IsPlayerInPropMenu() then return end
     if input.IsKeyDown(KEY_Y) and not hasOpenedPanel then
         hasOpenedPanel = true
         DoClose = true
@@ -557,7 +562,7 @@ end)
 hook.Remove( "ChatText", "joinleave")
 hook.Add( "ChatText", "joinleave", function( index, name, text, type )
 	if type != "chat" then
-		AddChatMessage("Console", text, "global")
+		AddChatMessage("Console", text, "Global", "")
 		lastMessage = CurTime()
 		return true
 	end
@@ -585,14 +590,15 @@ net.Receive("ReceiveChat", function(len)
     local text = net.ReadString()
     local chatTypeS = net.ReadString()
     local plyName = net.ReadString()
+    local plyTarget = net.ReadString()
 
 	lastMessage = CurTime()
     if hasOpenedPanel then
-        AddChatMessage(plyName, text, chatType)
+        AddChatMessage(plyName, text, chatType, plyTarget)
     else
         ChatBoxPanel(false)
 
-        AddChatMessage(plyName, text, chatTypeS)
+        AddChatMessage(plyName, text, chatTypeS, plyTarget)
     end
 end)
 
