@@ -63,11 +63,36 @@ net.Receive("SendChat", function(len, ply)
                         net.WriteString(ply:Name())
                     net.Send(plyl)
                 end
+            end 
+        elseif chatType == "Admin" then
+            if ply:IsAdmin() then
+                local players = player.GetAll()
+                for _, plyl in ipairs(players) do
+                    if plyl:IsAdmin() then
+                        net.Start("ReceiveChat")
+                            net.WriteString(sanitizedInput)
+                            net.WriteString(chatType)
+                            net.WriteString(ply:Name())
+                        net.Send(plyl)
+                    end
+                end 
             end
+        elseif chatType == "Recruitment" then
+            net.Start("ReceiveChat")
+                net.WriteString(sanitizedInput)
+                net.WriteString(chatType)
+                net.WriteString(ply:Name())
+            net.Broadcast()
+        elseif chatType == "Trade" then
+            net.Start("ReceiveChat")
+                net.WriteString(sanitizedInput)
+                net.WriteString(chatType)
+                net.WriteString(ply:Name())
+            net.Broadcast()
         end
     end
 end)
-
+/*
 timer.Create( "testTimer", 1, 20, function() 
     net.Start("ReceiveChat")
         net.WriteString("lmao")
@@ -77,4 +102,6 @@ timer.Create( "testTimer", 1, 20, function()
 end)
 
 timer.Start("testTimer")
+*/
+
 

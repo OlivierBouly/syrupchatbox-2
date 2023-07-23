@@ -11,7 +11,7 @@ local colours = {
     globalChat = Color(0,255,160),
     localChat = Color(214, 164, 56),
     dmChat = Color(186, 238, 238),
-    helpChat = Color(255, 165, 80),
+    adminChat = Color(255, 165, 80),
     tradeChat = Color(119, 246, 255),
     recruitmentChat = Color(255, 252, 80)
 }
@@ -342,22 +342,22 @@ function AddChatMessage(sender, text, chatTypeS)
 	local typePretty = "idk"
 	
 	if chatTypeS == "Global" then
-		typeColor = Color(91, 233, 115)
+		typeColor = colours.globalChat
 		typePretty = "GLOBAL"
 	elseif chatTypeS == "Local" then
-		typeColor = Color(214, 164, 56)
+		typeColor = colours.localChat
 		typePretty = "LOCAL"
 	elseif chatTypeS == "DM" then
-		typeColor = Color(186, 238, 238)
+		typeColor = colours.dmChat
 		typePretty = "DM"
+    elseif chatTypeS == "Admin" then
+		typeColor = colours.adminChat
+		typePretty = "ADMIN"
 	elseif chatTypeS == "Trade" then
-		typeColor = Color(119, 246, 255)
+		typeColor = colours.tradeChat
 		typePretty = "TRADE"
-	elseif chatTypeS == "Help" then
-		typeColor = Color(212, 129, 50)
-		typePretty = "HELP"
 	elseif chatTypeS == "Recruitment" then
-		typeColor = Color(255, 252, 80)
+		typeColor = colours.recruitmentChat
 		typePretty = "RECRUITMENT"
 	end
 
