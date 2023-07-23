@@ -32,6 +32,7 @@ local chatTypePanel = {}
 local chatBarPanel = {}
 local vbarPaint = {}
 local chatMessages = {}
+local doneOnce = false
 
 local lastChatType = ""
 local chatFadeout = 12
@@ -241,6 +242,51 @@ local function ChatBoxPanel(first)
     end
 
     if hasOpenedPanel then
+
+        function sendChat()
+            local target = ""
+    
+            local sanitizedInput = string.gsub(chatEntryPanel:GetText(), '[\\:%*%?%z%c"<>|]', '')
+
+            if string.Trim( sanitizedInput ) ~= "" then
+                if chatType == chatTypes[2] then
+                    lastChatType = "Local"
+                elseif chatType == chatTypes[3] then
+                    lastChatType = "DM"
+                    target = chatDMTargetPanel:GetText()
+                elseif chatType == chatTypes[4] then
+                    lastChatType = "Admin"
+                elseif chatType == chatTypes[5] then
+                    lastChatType = "Trade"
+                elseif chatType == chatTypes[6] then
+                    lastChatType = "Recruitment"
+                else
+                    lastChatType = "Global"
+                end
+
+                hasOpenedPanel = false
+
+                net.Start("SendChat")
+                    net.WriteString(sanitizedInput)
+                    net.WriteString(lastChatType)
+                    net.WriteString(target)
+                net.SendToServer()
+
+                chatEntryPanel:SetText("")
+                chatDMTargetPanel:SetText("")
+
+                timer.Create("frameFaded", 0.1, 0, function()
+                    hasOpenedPanel = false
+
+                    frame:SetMouseInputEnabled( false )
+                    frame:SetKeyboardInputEnabled( false )
+                    gui.EnableScreenClicker( false )
+
+                    timer.Remove("frameFaded")
+                end)
+            end
+        end    
+
         chatEntryPanel.OnTextChanged = function( self )
             if self and self.GetText then 
                 gamemode.Call( "ChatTextChanged", self:GetText() or "" )
@@ -310,72 +356,52 @@ local function ChatBoxPanel(first)
                 if typeSelector < 1 then typeSelector = 6 end
                 chatType = chatTypes[typeSelector]
                 lastChatType = chatType
-
-                if lastChatType == "DM" then
-                    chatDMTargetPanel:RequestFocus(true)
-                end
-    
+                chatEntryPanel:RequestFocus()
+                chatDMTargetPanel:SetText("")
+                doneOnce = false
             elseif code == KEY_ENTER then
-                
-                local target = ""
-    
-                local sanitizedInput = string.gsub(chatEntryPanel:GetText(), '[\\:%*%?%z%c"<>|]', '')
-
-                if string.Trim( sanitizedInput ) ~= "" then
-                    if chatType == chatTypes[2] then
-                        lastChatType = "Local"
-                    elseif chatType == chatTypes[3] then
-                        lastChatType = "DM"
-                        target = chatDMTargetPanel:GetText()
-                    elseif chatType == chatTypes[4] then
-                        lastChatType = "Admin"
-                    elseif chatType == chatTypes[5] then
-                        lastChatType = "Trade"
-                    elseif chatType == chatTypes[6] then
-                        lastChatType = "Recruitment"
-                    else
-                        lastChatType = "Global"
-                    end
-
-                    hasOpenedPanel = false
-    
-                    net.Start("SendChat")
-                        net.WriteString(sanitizedInput)
-                        net.WriteString(lastChatType)
-                        net.WriteString(target)
-                    net.SendToServer()
-
-                    chatEntryPanel:SetText("")
-                    chatDMTargetPanel:SetText("")
-
-                    timer.Create("frameFaded", 0.1, 0, function()
-                        hasOpenedPanel = false
-
-                        frame:SetMouseInputEnabled( false )
-                        frame:SetKeyboardInputEnabled( false )
-                        gui.EnableScreenClicker( false )
-
-                        timer.Remove("frameFaded")
-                    end)
-                end
+                sendChat()
             end
         end
+        function chatDMTargetPanel.OnKeyCodeTyped(self, code)
+            if code == KEY_TAB then
+                
+                typeSelector = (typeSelector and typeSelector + 1)
+                chatType = chatTypes[typeSelector]
+                lastChatType = chatType
+                chatEntryPanel:RequestFocus()
+                chatDMTargetPanel:SetText("")
+                doneOnce = false
+            elseif code == KEY_ENTER then
+                sendChat()
+            end
+        end
+
         function frame:Think()
             if IsPlayerInPropMenu() then return end
         
-            if hasOpenedPanel and lastChatType != "DM" then
-                chatEntryPanel:RequestFocus()
+            if hasOpenedPanel then
+                if lastChatType == "DM" then
+                    if !doneOnce then
+                        chatEntryPanel:RequestFocus()
+                        doneOnce = true
+                    end    
+                else
+                    chatEntryPanel:RequestFocus()
+                end
             end
         
             if self.UseDown and not input.IsKeyDown(KEY_Y) then
                 self.UseDown = false
                 return
             elseif input.IsKeyDown(KEY_ESCAPE) then
+                doneOnce = false
                 if hasOpenedPanel then
                     gui.HideGameUI()
                 end
                 lastMessage = CurTime()
                 chatEntryPanel:SetText("")
+                chatDMTargetPanel:SetText("")
                 hasOpenedPanel = false
                 frame:SetMouseInputEnabled(false)
                 frame:SetKeyboardInputEnabled(false)
@@ -439,7 +465,7 @@ function AddChatMessage(sender, text, chatTypeS)
     chatTxt:Dock(TOP)
     chatTxt:SetVerticalScrollbarEnabled(false)
     chatTxt:InsertColorChange( typeColor.r, typeColor.g, typeColor.b, 255 )
-    chatTxt:SetZPos(2)
+    chatTxt:SetZPos(1)
 
     local splitSize = 58
     local splitStrings = {}
@@ -511,9 +537,9 @@ function AddChatMessage(sender, text, chatTypeS)
 
     local function PanelPainted()
 		AfterPanelPaint(msgParent)
-	  end
+	end
 	
-	  hook.Add("Think", "PanelPaint", PanelPainted)
+	hook.Add("Think", "PanelPaint", PanelPainted)
 
 end
 
