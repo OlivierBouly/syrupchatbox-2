@@ -232,6 +232,22 @@ local function ChatBoxPanel(first)
                 lastChatType = "Local"
                 chatType = "Local"
                 self:SetText(string.sub(self:GetText(), 4))
+            elseif checkCommand == "/a " then
+                lastChatType = "Admin"
+                chatType = "Admin"
+                self:SetText(string.sub(self:GetText(), 4))
+            elseif checkCommand == "/t " then
+                lastChatType = "Trade"
+                chatType = "Trade"
+                self:SetText(string.sub(self:GetText(), 4))
+            elseif checkCommand == "/r " then
+                lastChatType = "Recruitment"
+                chatType = "Recruitment"
+                self:SetText(string.sub(self:GetText(), 4))
+            elseif checkCommand == "/d " then
+                lastChatType = "DM"
+                chatType = "DM"
+                self:SetText(string.sub(self:GetText(), 4))
             end
 
             local currentText = self:GetText()
