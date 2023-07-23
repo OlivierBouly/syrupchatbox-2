@@ -495,7 +495,7 @@ function AddChatMessage(sender, text, chatTypeS, target)
     if chatTypeS == "DM" then
         chatInfo:AppendText(sender .. " to " .. target .. " * ")
     else
-        
+        chatInfo:AppendText(sender .. " * ")
     end
     
     chatInfo:InsertColorChange(typeColor.r, typeColor.g, typeColor.b, 255)

@@ -88,7 +88,7 @@ net.Receive("SendChat", function(len, ply)
         local plyFound = false
         for _, plyl in ipairs(players) do
             if plyl:Name() == target then
-                okyFound = true
+                plyFound = true
                 net.Start("ReceiveChat")
                     net.WriteString(sanitizedInput)
                     net.WriteString(chatType)
