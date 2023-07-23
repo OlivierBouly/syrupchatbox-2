@@ -34,8 +34,9 @@ local vbarPaint = {}
 local chatMessages = {}
 
 local lastChatType = ""
+local chatFadeout = 12
 
-local lastMessage = {}
+local lastMessage = 0
 
 surface.CreateFont( "sChat_18", {
     font = "Roboto Lt",
@@ -218,6 +219,16 @@ local function ChatBoxPanel(first)
         end
     end
 
+    chatLogPanel.Think = function( self )
+		if lastMessage then
+			if CurTime() - lastMessage > chatFadeout then
+				self:SetVisible( false )
+			else
+				self:SetVisible( true )
+			end
+		end
+    end
+
     if hasOpenedPanel then
         chatEntryPanel.OnTextChanged = function( self )
             if self and self.GetText then 
@@ -343,6 +354,7 @@ local function ChatBoxPanel(first)
                 if hasOpenedPanel then
                     gui.HideGameUI()
                 end
+                lastMessage = CurTime()
                 chatEntryPanel:SetText("")
                 hasOpenedPanel = false
                 frame:SetMouseInputEnabled(false)
@@ -490,8 +502,19 @@ timer.Create("ChatBoxPanel", 0, 0, function()
     if input.IsKeyDown(KEY_Y) and not hasOpenedPanel then
         hasOpenedPanel = true
         DoClose = true
+        lastMessage = nil
+        chatLogPanel:SetVisible( true )
         ChatBoxPanel(false)
     end
+end)
+
+hook.Remove( "ChatText", "joinleave")
+hook.Add( "ChatText", "joinleave", function( index, name, text, type )
+	if type != "chat" then
+		AddChatMessage("Console", text, "global")
+		lastMessage = CurTime()
+		return true
+	end
 end)
 
 -- Hide the default chat too in case that pops up

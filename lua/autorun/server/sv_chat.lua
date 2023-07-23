@@ -35,73 +35,68 @@ function GAMEMODE:PlayerCanHearPlayersVoice( listener, speaker)
 end
 
 net.Receive("SendChat", function(len, ply)
-
     local text = net.ReadString()
     local chatType = net.ReadString()
     local target = net.ReadString()
 
     local sanitizedInput = string.gsub(text, '[\\:%*%?%z%c"<>|]', '')
 
-    print(sanitizedInput)
-    
-    if target ~= "" then
-        --dm
-    else
-        if chatType == "Global" then
-            net.Start("ReceiveChat")
+    if chatType == "Global" then
+        net.Start("ReceiveChat")
+        net.WriteString(sanitizedInput)
+        net.WriteString(chatType)
+        net.WriteString(ply:Name())
+        net.Broadcast()
+    elseif chatType == "Local" then
+        local players = player.GetAll()
+        for _, plyl in ipairs(players) do
+            if PlayerCanSeeChat(chatType, plyl, ply) then
+                net.Start("ReceiveChat")
                 net.WriteString(sanitizedInput)
                 net.WriteString(chatType)
                 net.WriteString(ply:Name())
-            net.Broadcast()
-        elseif chatType == "Local" then
+                net.Send(plyl)
+            end
+        end
+    elseif chatType == "Admin" then
+        if ply:IsAdmin() then
             local players = player.GetAll()
             for _, plyl in ipairs(players) do
-                if PlayerCanSeeChat(chatType, plyl, ply) then
+                if plyl:IsAdmin() then
                     net.Start("ReceiveChat")
-                        net.WriteString(sanitizedInput)
-                        net.WriteString(chatType)
-                        net.WriteString(ply:Name())
+                    net.WriteString(sanitizedInput)
+                    net.WriteString(chatType)
+                    net.WriteString(ply:Name())
                     net.Send(plyl)
                 end
-            end 
-        elseif chatType == "Admin" then
-            if ply:IsAdmin() then
-                local players = player.GetAll()
-                for _, plyl in ipairs(players) do
-                    if plyl:IsAdmin() then
-                        net.Start("ReceiveChat")
-                            net.WriteString(sanitizedInput)
-                            net.WriteString(chatType)
-                            net.WriteString(ply:Name())
-                        net.Send(plyl)
-                    end
-                end 
             end
-        elseif chatType == "Recruitment" then
-            net.Start("ReceiveChat")
-                net.WriteString(sanitizedInput)
-                net.WriteString(chatType)
-                net.WriteString(ply:Name())
-            net.Broadcast()
-        elseif chatType == "Trade" then
-            net.Start("ReceiveChat")
-                net.WriteString(sanitizedInput)
-                net.WriteString(chatType)
-                net.WriteString(ply:Name())
-            net.Broadcast()
         end
+    elseif chatType == "Recruitment" then
+        net.Start("ReceiveChat")
+        net.WriteString(sanitizedInput)
+        net.WriteString(chatType)
+        net.WriteString(ply:Name())
+        net.Broadcast()
+    elseif chatType == "Trade" then
+        net.Start("ReceiveChat")
+        net.WriteString(sanitizedInput)
+        net.WriteString(chatType)
+        net.WriteString(ply:Name())
+        net.Broadcast()
     end
 end)
 /*
-timer.Create( "testTimer", 1, 20, function() 
+timer.Create( "testTimer", 15, 20, function() 
     net.Start("ReceiveChat")
         net.WriteString("lmao")
         net.WriteString("Global")
-        net.WriteString("ply:Name()")
+        net.WriteString("Benjamin")
     net.Broadcast()
 end)
 
 timer.Start("testTimer")
 */
+
+
 
 
