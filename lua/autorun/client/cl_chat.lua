@@ -326,6 +326,16 @@ local function ChatBoxPanel(first)
     end
 end
 
+local function AfterPanelPaint(panel)
+
+	if not hasOpenedPanel then
+		local scroll = chatLogPanel:GetVBar()
+		local current = scroll:GetScroll()
+		scroll:SetScroll(current + 10000000000000000)
+	end
+
+end
+
 function AddChatMessage(sender, text, chatTypeS)
 
 	local typeColor = Color(0, 0, 0)
@@ -439,6 +449,13 @@ function AddChatMessage(sender, text, chatTypeS)
 		end
 
 	end
+
+    local function PanelPainted()
+		AfterPanelPaint(msgParent)
+	  end
+	
+	  hook.Add("Think", "PanelPaint", PanelPainted)
+
 end
 
 timer.Create("ChatBoxPanel", 0, 0, function()

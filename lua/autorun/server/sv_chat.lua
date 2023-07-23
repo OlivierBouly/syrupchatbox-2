@@ -67,14 +67,14 @@ net.Receive("SendChat", function(len, ply)
         end
     end
 end)
-/*
+
 timer.Create( "testTimer", 1, 20, function() 
     net.Start("ReceiveChat")
         net.WriteString("lmao")
-        net.WriteString("global")
+        net.WriteString("Global")
         net.WriteString("ply:Name()")
     net.Broadcast()
 end)
 
 timer.Start("testTimer")
-*/
+
