@@ -86,7 +86,7 @@ net.Receive("SendChat", function(len, ply)
     elseif chatType == "DM" then
         local players = player.GetAll()
         for _, plyl in ipairs(players) do
-            if plyl:Name() == target then
+            if plyl:Name() == target or plyl:Name() == ply:Name() then
                 net.Start("ReceiveChat")
                 net.WriteString(sanitizedInput)
                 net.WriteString(chatType)
