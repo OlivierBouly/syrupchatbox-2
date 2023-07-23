@@ -12,13 +12,13 @@ end
 function PlayerCanSeeChat(chatType, listener, speaker)
     local dist = listener:GetPos() : Distance( speaker:GetPos() )
 
-    if( chatType == "local" ) then
+    if( chatType == "Local" ) then
         if(dist <= 300 or (listener:Visible( speaker ) and dist <= 500)) then
             return true
         end
         return false
     end
-    if( chatType == "global" ) then
+    if( chatType == "Global" ) then
         return true
     end
     if chatType == "dm" then
@@ -41,17 +41,19 @@ net.Receive("SendChat", function(len, ply)
     local target = net.ReadString()
 
     local sanitizedInput = string.gsub(text, '[\\:%*%?%z%c"<>|]', '')
+
+    print(sanitizedInput)
     
     if target ~= "" then
         --dm
     else
-        if chatType == "global" then
+        if chatType == "Global" then
             net.Start("ReceiveChat")
                 net.WriteString(sanitizedInput)
                 net.WriteString(chatType)
                 net.WriteString(ply:Name())
             net.Broadcast()
-        elseif chatType == "local" then
+        elseif chatType == "Local" then
             local players = player.GetAll()
             for _, plyl in ipairs(players) do
                 if PlayerCanSeeChat(chatType, plyl, ply) then
@@ -66,17 +68,6 @@ net.Receive("SendChat", function(len, ply)
     end
 end)
 /*
-
-*/
-
-timer.Simple(10, function() 
-    net.Start("ReceiveChat")
-        net.WriteString("lmao")
-        net.WriteString("global")
-        net.WriteString("ply:Name()")
-    net.Broadcast()
-end)
-
 timer.Create( "testTimer", 1, 20, function() 
     net.Start("ReceiveChat")
         net.WriteString("lmao")
@@ -86,3 +77,4 @@ timer.Create( "testTimer", 1, 20, function()
 end)
 
 timer.Start("testTimer")
+*/

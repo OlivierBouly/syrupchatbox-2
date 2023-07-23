@@ -31,6 +31,7 @@ local chatEntryPanel = {}
 local chatTypePanel = {}
 local chatBarPanel = {}
 local vbarPaint = {}
+local chatMessages = {}
 
 local lastChatType = ""
 
@@ -261,15 +262,14 @@ local function ChatBoxPanel(first)
                 
                 local target = ""
     
-                local sanitizedInput = string.gsub(self:GetText(), '[\\:%*%?%z%c"<>|]', '')
-    
-                -- Replicate the client pressing enter
-                if string.Trim( sanitizedInput ) != "" then
+                local sanitizedInput = string.gsub(chatEntryPanel:GetText(), '[\\:%*%?%z%c"<>|]', '')
+
+                if string.Trim( sanitizedInput ) ~= "" then
                     if chatType == chatTypes[2] then
                         lastChatType = "Local"
                     elseif chatType == chatTypes[3] then
                         lastChatType = "DM"
-                        target = "123"
+                        target = chatDMTargetPanel:GetText()
                     elseif chatType == chatTypes[4] then
                         lastChatType = "Admin"
                     elseif chatType == chatTypes[5] then
@@ -279,10 +279,17 @@ local function ChatBoxPanel(first)
                     else
                         lastChatType = "Global"
                     end
+
+                    hasOpenedPanel = false
     
-                    if self:GetText() ~= nil then
-                        sendToServer("SendChat", sanitizedInput, chatType, target)
-                    end
+                    net.Start("SendChat")
+                        net.WriteString(sanitizedInput)
+                        net.WriteString(lastChatType)
+                        net.WriteString(target)
+                    net.SendToServer()
+
+                    chatEntryPanel:SetText("")
+
                     timer.Create("frameFaded", 0.1, 0, function()
                         hasOpenedPanel = false
 
@@ -309,6 +316,7 @@ local function ChatBoxPanel(first)
                 if hasOpenedPanel then
                     gui.HideGameUI()
                 end
+                chatEntryPanel:SetText("")
                 hasOpenedPanel = false
                 frame:SetMouseInputEnabled(false)
                 frame:SetKeyboardInputEnabled(false)
@@ -318,23 +326,30 @@ local function ChatBoxPanel(first)
     end
 end
 
-function AddChatMessage(sender, text, chatType)
+function AddChatMessage(sender, text, chatTypeS)
 
-    local typeColor = Color(0, 0, 0)
-    
-    if chatType == "Global" then
-        typeColor = colours[1]
-    elseif chatType == "Local" then
-        typeColor = colours[2]
-    elseif chatType == "DM" then
-        typeColor = colours[3]
-    elseif chatType == "Trade" then
-        typeColor = colours[4]
-    elseif chatType == "Help" then
-        typeColor = colours[5]
-    elseif chatType == "Recruitment" then
-        typeColor = colours[6]
-    end
+	local typeColor = Color(0, 0, 0)
+	local typePretty = "idk"
+	
+	if chatTypeS == "Global" then
+		typeColor = Color(91, 233, 115)
+		typePretty = "GLOBAL"
+	elseif chatTypeS == "Local" then
+		typeColor = Color(214, 164, 56)
+		typePretty = "LOCAL"
+	elseif chatTypeS == "DM" then
+		typeColor = Color(186, 238, 238)
+		typePretty = "DM"
+	elseif chatTypeS == "Trade" then
+		typeColor = Color(119, 246, 255)
+		typePretty = "TRADE"
+	elseif chatTypeS == "Help" then
+		typeColor = Color(212, 129, 50)
+		typePretty = "HELP"
+	elseif chatTypeS == "Recruitment" then
+		typeColor = Color(255, 252, 80)
+		typePretty = "RECRUITMENT"
+	end
 
     local chatParent = vgui.Create("Panel", chatLogPanel)
     chatParent:SetSize(chatLogPanel:GetWide(), chatLogPanel:GetTall() * 0.09)
@@ -352,9 +367,10 @@ function AddChatMessage(sender, text, chatType)
 
     local chatTxt = vgui.Create("RichText", chatParent)
     chatTxt:SetContentAlignment(7)
+    chatTxt:Dock(TOP)
     chatTxt:SetVerticalScrollbarEnabled(false)
     chatTxt:InsertColorChange( typeColor.r, typeColor.g, typeColor.b, 255 )
-    chatTxt:SetZPos(1)
+    chatTxt:SetZPos(2)
 
     local splitSize = 58
     local splitStrings = {}
@@ -383,7 +399,7 @@ function AddChatMessage(sender, text, chatType)
     chatInfo:InsertColorChange(255, 255, 255, 255)
     chatInfo:AppendText(sender .. " * ")
     chatInfo:InsertColorChange(typeColor.r, typeColor.g, typeColor.b, 255)
-    chatInfo:AppendText(chatType)
+    chatInfo:AppendText(typePretty)
     chatInfo:SetSize(chatParent:GetWide(), chatParent:GetTall() * 0.5 + 5)
 	chatInfo:SetZPos(1)
 	
@@ -454,7 +470,7 @@ end )
 
 net.Receive("ReceiveChat", function(len)
     local text = net.ReadString()
-    local chatType = net.ReadString()
+    local chatTypeS = net.ReadString()
     local plyName = net.ReadString()
 
 	lastMessage = CurTime()
@@ -463,7 +479,7 @@ net.Receive("ReceiveChat", function(len)
     else
         ChatBoxPanel(false)
 
-        AddChatMessage(plyName, text, chatType)
+        AddChatMessage(plyName, text, chatTypeS)
     end
 end)
 
