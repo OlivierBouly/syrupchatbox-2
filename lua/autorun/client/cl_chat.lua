@@ -325,9 +325,8 @@ local function ChatBoxPanel(first)
             local maxCharacterLimit = 200
         
             if #currentText > maxCharacterLimit then
-                -- Truncate the text to the maximum character limit
                 self:SetText(string.sub(currentText, 1, maxCharacterLimit))
-                self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
+                self:SetCaretPos(maxCharacterLimit)
             end
         end
 
@@ -338,9 +337,8 @@ local function ChatBoxPanel(first)
             local currentText = self:GetText()
             local maxCharacterLimit = 200
             if #currentText > maxCharacterLimit then
-                -- Truncate the text to the maximum character limit
                 self:SetText(string.sub(currentText, 1, maxCharacterLimit))
-                self:SetCaretPos(maxCharacterLimit) -- Set the caret position to the end
+                self:SetCaretPos(maxCharacterLimit)
             end
         end
 
@@ -355,15 +353,28 @@ local function ChatBoxPanel(first)
         function chatEntryPanel.OnKeyCodeTyped(self, code)
             local currentText = self:GetText()
             if code == KEY_TAB then
+
+                if LocalPlayer():IsAdmin() then
+                    typeSelector = (typeSelector and typeSelector + 1) or 2
+                    if typeSelector > 6 then typeSelector = 1 end
+                    if typeSelector < 1 then typeSelector = 6 end
+                    chatType = chatTypes[typeSelector]
+                    lastChatType = chatType
+                    chatEntryPanel:RequestFocus()
+                    chatDMTargetPanel:SetText("")
+                    doneOnce = false
+                else
+                    typeSelector = (typeSelector and typeSelector + 1) or 2
+                    if typeSelector > 5 then typeSelector = 1 end
+                    if typeSelector < 1 then typeSelector = 5 end
+                    chatType = chatTypes[typeSelector]
+                    lastChatType = chatType
+                    chatEntryPanel:RequestFocus()
+                    chatDMTargetPanel:SetText("")
+                    doneOnce = false
+                end
                 
-                typeSelector = (typeSelector and typeSelector + 1) or 2
-                if typeSelector > 6 then typeSelector = 1 end
-                if typeSelector < 1 then typeSelector = 6 end
-                chatType = chatTypes[typeSelector]
-                lastChatType = chatType
-                chatEntryPanel:RequestFocus()
-                chatDMTargetPanel:SetText("")
-                doneOnce = false
+
             elseif code == KEY_ENTER then
                 sendChat()
             end
@@ -433,9 +444,7 @@ local function charWrap(text, remainingWidth, maxWidth)
     text = text:gsub(".", function(char)
         totalWidth = totalWidth + surface.GetTextSize(char)
 
-        -- Wrap around when the max width is reached
         if totalWidth >= remainingWidth then
-            -- totalWidth needs to include the character width because it's inserted in a new line
             totalWidth = surface.GetTextSize(char)
             remainingWidth = maxWidth
             return "\n" .. char
@@ -462,8 +471,7 @@ function textWrap(text, font, maxWidth)
             local wordlen = surface.GetTextSize(word)
             totalWidth = totalWidth + wordlen
 
-            -- Wrap around when the max width is reached
-            if wordlen >= maxWidth then -- Split the word if the word is too big
+            if wordlen >= maxWidth then
                 local splitWord, splitPoint = charWrap(word, maxWidth - (totalWidth - wordlen), maxWidth)
                 totalWidth = splitPoint
                 return splitWord
@@ -471,7 +479,6 @@ function textWrap(text, font, maxWidth)
                 return word
             end
 
-            -- Split before the word
             if char == ' ' then
                 totalWidth = wordlen - spaceWidth
                 return '\n' .. string.sub(word, 2)
@@ -533,7 +540,7 @@ function AddChatMessage(sender, text, chatTypeS, target)
     chatTxt:SizeToContents()
     local message, count = textWrap(text, "sChat_18", chatLogPanel:GetWide() - 10)
     print(count)
-    local _, lineHeight = surface.GetTextSize("sChat_18") -- Replace "Sample line" with your desired font and text
+    local _, lineHeight = surface.GetTextSize("sChat_18")
     local totalHeight = count * lineHeight
 
     chatTxt:SetTall(totalHeight)
@@ -543,7 +550,7 @@ function AddChatMessage(sender, text, chatTypeS, target)
     end
     --abcdefghijklmnopqrstuvwxyz
     function chatTxt:Paint( w, h )
-        draw.DrawText( message, "sChat_18", 0, 0, Color( typeColor.r, typeColor.g, typeColor.b, 255 ), TEXT_ALIGN_LEFT )
+        draw.DrawText( message, "sChat_18", 4, 0, Color( typeColor.r, typeColor.g, typeColor.b, 255 ), TEXT_ALIGN_LEFT )
     end    
 
     local chatInfo = vgui.Create("RichText", chatParent)
