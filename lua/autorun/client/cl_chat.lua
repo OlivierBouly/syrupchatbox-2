@@ -33,6 +33,7 @@ local chatBarPanel = {}
 local vbarPaint = {}
 local chatMessages = {}
 local doneOnce = false
+local curretnText = ""
 
 local lastChatType = ""
 local chatFadeout = 12
@@ -165,6 +166,8 @@ local function ChatBoxPanel(first)
         chatEntryPanel:SetTextColor(Color(255, 255, 255))
         chatEntryPanel:SetFont("sChat_18")
         chatEntryPanel:SetHighlightColor( Color(52, 152, 219) )
+        chatEntryPanel:SetHistoryEnabled(true)
+
     end
     if hasOpenedPanel then
         chatEntryPanel:RequestFocus()
@@ -285,12 +288,13 @@ local function ChatBoxPanel(first)
                     timer.Remove("frameFaded")
                 end)
             end
-        end    
+        end
 
         chatEntryPanel.OnTextChanged = function( self )
             if self and self.GetText then 
                 gamemode.Call( "ChatTextChanged", self:GetText() or "" )
             end
+
             local checkCommand = string.sub(self:GetText(), 1, 3)
             if checkCommand == "/g " then
                 lastChatType = "Global"
@@ -317,9 +321,9 @@ local function ChatBoxPanel(first)
                 chatType = "DM"
                 self:SetText(string.sub(self:GetText(), 4))
             end
-
             local currentText = self:GetText()
             local maxCharacterLimit = 200
+        
             if #currentText > maxCharacterLimit then
                 -- Truncate the text to the maximum character limit
                 self:SetText(string.sub(currentText, 1, maxCharacterLimit))
@@ -349,6 +353,8 @@ local function ChatBoxPanel(first)
         end
     
         function chatEntryPanel.OnKeyCodeTyped(self, code)
+            local currentText = self:GetText()
+            local wLine, _ = surface.GetTextSize(currentText)
             if code == KEY_TAB then
                 
                 typeSelector = (typeSelector and typeSelector + 1) or 2
@@ -362,7 +368,11 @@ local function ChatBoxPanel(first)
             elseif code == KEY_ENTER then
                 sendChat()
             end
+            if chatEntryPanel:GetWide() < wLine then
+                self:SetText(currentText .. "/skip")
+            end
         end
+
         function chatDMTargetPanel.OnKeyCodeTyped(self, code)
             if code == KEY_TAB then
                 
@@ -467,7 +477,26 @@ function AddChatMessage(sender, text, chatTypeS, target)
     chatTxt:InsertColorChange( typeColor.r, typeColor.g, typeColor.b, 255 )
     chatTxt:SetZPos(1)
     chatTxt:SetWide(chatLogPanel:GetWide())
+    chatTxt:SizeToContents()
+
+    -- Count the number of '\n' characters in the text
+    print(text)
+    local _, count = string.gsub(text, "/skip", "\n") -- Add 1 to account for the last line that doesn't end with a newline character.
+    count = count + 1
+    print(count)
+
+    -- Get the height of a single line of text (assuming you have already set the font)
+    local _, lineHeight = surface.GetTextSize("A")
+
+    -- Calculate the total height based on the number of lines and their heights
+    local totalHeight = count * lineHeight
+
+    -- Set the height of chatTxt to fit all the lines
+    chatTxt:SetTall(totalHeight)
+
+    -- Finally, append the text to chatTxt
     chatTxt:AppendText(text)
+
     --abcdefghijklmnopqrstuvwxyz
     /*
     local function GetSplitSpot(str, maxWidth)
