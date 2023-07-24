@@ -45,7 +45,7 @@ net.Receive("SendChat", function(len, ply)
         net.Start("ReceiveChat")
         net.WriteString(sanitizedInput)
         net.WriteString(chatType)
-        net.WriteString(ply:Name())
+        net.WriteString(ply:Nick())
         net.Broadcast()
     elseif chatType == "Local" then
         local players = player.GetAll()
@@ -54,7 +54,7 @@ net.Receive("SendChat", function(len, ply)
                 net.Start("ReceiveChat")
                 net.WriteString(sanitizedInput)
                 net.WriteString(chatType)
-                net.WriteString(ply:Name())
+                net.WriteString(ply:Nick())
                 net.Send(plyl)
             end
         end
@@ -66,7 +66,7 @@ net.Receive("SendChat", function(len, ply)
                     net.Start("ReceiveChat")
                     net.WriteString(sanitizedInput)
                     net.WriteString(chatType)
-                    net.WriteString(ply:Name())
+                    net.WriteString(ply:Nick())
                     net.Send(plyl)
                 end
             end
@@ -75,24 +75,24 @@ net.Receive("SendChat", function(len, ply)
         net.Start("ReceiveChat")
         net.WriteString(sanitizedInput)
         net.WriteString(chatType)
-        net.WriteString(ply:Name())
+        net.WriteString(ply:Nick())
         net.Broadcast()
     elseif chatType == "Trade" then
         net.Start("ReceiveChat")
             net.WriteString(sanitizedInput)
             net.WriteString(chatType)
-            net.WriteString(ply:Name())
+            net.WriteString(ply:Nick())
         net.Broadcast()
     elseif chatType == "DM" then
         local players = player.GetAll()
         local plyFound = false
         for _, plyl in ipairs(players) do
-            if plyl:Name() == target then
+            if plyl:Nick() == target then
                 plyFound = true
                 net.Start("ReceiveChat")
                     net.WriteString(sanitizedInput)
                     net.WriteString(chatType)
-                    net.WriteString(ply:Name())
+                    net.WriteString(ply:Nick())
                     net.WriteString(target)
                 net.Send(plyl)
             end
@@ -101,14 +101,14 @@ net.Receive("SendChat", function(len, ply)
             net.Start("ReceiveChat")
                 net.WriteString(sanitizedInput)
                 net.WriteString(chatType)
-                net.WriteString(ply:Name())
+                net.WriteString(ply:Nick())
                 net.WriteString(target)
             net.Send(ply)
         else
             net.Start("ReceiveChat")
                 net.WriteString("Target not found")
                 net.WriteString(chatType)
-                net.WriteString(ply:Name())
+                net.WriteString(ply:Nick())
                 net.WriteString("unknown")
             net.Send(ply)
         end
@@ -120,6 +120,7 @@ timer.Create( "testTimer", 15, 20, function()
         net.WriteString("lmao")
         net.WriteString("Global")
         net.WriteString("Benjamin")
+        net.WriteString("")
     net.Broadcast()
 end)
 

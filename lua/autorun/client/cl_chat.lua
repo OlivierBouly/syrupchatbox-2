@@ -94,7 +94,7 @@ local function ChatBoxPanel(first)
 
     if first then
         frame = vgui.Create( "DFrame" )
-        frame:SetSize(ScrW() * 0.25, ScrH() * 0.4)
+        frame:SetSize(ScrW() * 0.21, ScrH() * 0.4)
         frame:SetTitle("")
         frame:ShowCloseButton(false) //temp
         frame:SetPos(ScrW() * 0.005, ScrH() * 0.5)
@@ -467,21 +467,36 @@ function AddChatMessage(sender, text, chatTypeS, target)
     chatTxt:InsertColorChange( typeColor.r, typeColor.g, typeColor.b, 255 )
     chatTxt:SetZPos(1)
 
-    local splitSize = 58
-    local splitStrings = {}
-
-    for i = 1, #text, splitSize do
-           local substring = string.sub(text, i, i + splitSize - 1)
-        table.insert(splitStrings, substring)
-    end
-
-    for i, line in ipairs(splitStrings) do
-        if i > 1 then
-            local wLine, hLine = surface.GetTextSize(line)
-            chatTxt:SetTall(chatTxt:GetTall() + hLine)
+    local function SplitTextToFitWidth(text, maxWidth)
+        local words = string.Explode(" ", text)
+        local lines = {""}
+    
+        for _, word in ipairs(words) do
+            local lineWithWord = lines[#lines] .. " " .. word
+            local wLine, _ = surface.GetTextSize(lineWithWord)
+    
+            if wLine <= maxWidth then
+                lines[#lines] = lineWithWord
+            else
+                table.insert(lines, word)
+            end
         end
-        chatTxt:AppendText(line)
+    
+        return table.concat(lines, "\n")
     end
+
+    local maxWidth = chatLogPanel:GetWide()
+    
+    local splitText = SplitTextToFitWidth(text, maxWidth)
+    chatTxt:AppendText(splitText)
+
+    local newlineCount = text:gsub("[^\n]", ""):len() and 1
+    local _, lineHeight = surface.GetTextSize(splitText) -- Replace "Sample line" with your desired font and text
+    local totalHeight = newlineCount * lineHeight
+
+    -- Set the height of chatTxt to fit all the lines
+    chatTxt:SetTall(totalHeight)
+
 
     chatTxt.PerformLayout = function (self)
         self:SetFontInternal("sChat_18")
