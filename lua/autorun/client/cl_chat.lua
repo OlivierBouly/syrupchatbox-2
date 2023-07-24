@@ -466,44 +466,55 @@ function AddChatMessage(sender, text, chatTypeS, target)
     chatTxt:SetVerticalScrollbarEnabled(false)
     chatTxt:InsertColorChange( typeColor.r, typeColor.g, typeColor.b, 255 )
     chatTxt:SetZPos(1)
-
-    local function SplitTextToFitWidth(text, maxWidth)
-        local words = string.Explode(" ", text)
-        local lines = {""}
+    chatTxt:SetWide(chatLogPanel:GetWide())
+    chatTxt:AppendText(text)
+    --abcdefghijklmnopqrstuvwxyz
+    /*
+    local function GetSplitSpot(str, maxWidth)
+        for splitSpot = #str, 1, -1 do
+            local testStr = string.sub(str, 1, splitSpot)
+            surface.SetFont("sChat_18") -- Replace "YourFontNameHere" with the font name you are using.
+            local wLine, _ = surface.GetTextSize(testStr)
     
-        for _, word in ipairs(words) do
-            if lines[#lines] == "" then
-                lines[#lines] = word
-            else
-                local lineWithWord = lines[#lines] .. " " .. word
-                local wLine, _ = surface.GetTextSize(lineWithWord)
-    
-                if wLine <= maxWidth then
-                    lines[#lines] = lineWithWord
-                else
-                    while #word > 0 do
-                        local remainingWord = string.sub(word, 1, maxWidth)
-                        table.insert(lines, remainingWord)
-                        word = string.sub(word, maxWidth + 1)
-                    end
-                end
+            if wLine <= maxWidth then
+                return splitSpot - 2
             end
         end
     
-        return table.concat(lines, "\n")
+        return 1 -- If maxWidth is too small to fit even one character, return 1.
+    end
+    
+    local wText, _ = surface.GetTextSize(text)
+    local maxWidth = chatTxt:GetWide()
+    local splitSpot = GetSplitSpot(text, maxWidth)
+    local textCopy = text
+
+    local function SplitStringAtEveryX(str, x)
+        local parts = {}
+        textCopy = str
+
+        while string.len(textCopy) > x do
+            local part = string.sub(textCopy,1 , x)
+            textCopy = string.sub(textCopy, x + 1)
+            table.insert(parts, part .. "\n")
+        end
+
+        table.insert(parts, textCopy)
+    
+        return parts
     end
 
-    local maxWidth = chatLogPanel:GetWide()
+    local parts = SplitStringAtEveryX(text, splitSpot)
+    local totalHeight = 0
     
-    local splitText = SplitTextToFitWidth(text, maxWidth)
-    chatTxt:AppendText(splitText)
-
-    local newlineCount = text:gsub("[^\n]", ""):len()
-    local _, lineHeight = surface.GetTextSize(splitText) -- Replace "Sample line" with your desired font and text
-    local totalHeight = newlineCount * lineHeight
-
-    -- Set the height of chatTxt to fit all the lines
-    chatTxt:SetTall(math.max(totalHeight, lineHeight))
+    for _, part in ipairs(parts) do
+        local _, hLine = surface.GetTextSize(part)
+        totalHeight = totalHeight + (hLine / 1.5)
+        chatTxt:AppendText(part)
+    end
+    
+    chatTxt:SetTall(totalHeight)
+*/
 
 
     chatTxt.PerformLayout = function (self)
