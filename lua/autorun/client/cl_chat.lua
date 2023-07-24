@@ -354,7 +354,6 @@ local function ChatBoxPanel(first)
     
         function chatEntryPanel.OnKeyCodeTyped(self, code)
             local currentText = self:GetText()
-            local wLine, _ = surface.GetTextSize(currentText)
             if code == KEY_TAB then
                 
                 typeSelector = (typeSelector and typeSelector + 1) or 2
@@ -367,9 +366,6 @@ local function ChatBoxPanel(first)
                 doneOnce = false
             elseif code == KEY_ENTER then
                 sendChat()
-            end
-            if chatEntryPanel:GetWide() < wLine then
-                self:SetText(currentText .. "/skip")
             end
         end
 
@@ -431,6 +427,65 @@ local function AfterPanelPaint(panel)
 
 end
 
+local function charWrap(text, remainingWidth, maxWidth)
+    local totalWidth = 0
+
+    text = text:gsub(".", function(char)
+        totalWidth = totalWidth + surface.GetTextSize(char)
+
+        -- Wrap around when the max width is reached
+        if totalWidth >= remainingWidth then
+            -- totalWidth needs to include the character width because it's inserted in a new line
+            totalWidth = surface.GetTextSize(char)
+            remainingWidth = maxWidth
+            return "\n" .. char
+        end
+
+        return char
+    end)
+
+    return text, totalWidth
+end
+
+function textWrap(text, font, maxWidth)
+    local totalWidth = 0
+
+    surface.SetFont(font)
+
+    local spaceWidth = surface.GetTextSize(' ')
+    text = text:gsub("(%s?[%S]+)", function(word)
+            local char = string.sub(word, 1, 1)
+            if char == "\n" or char == "\t" then
+                totalWidth = 0
+            end
+
+            local wordlen = surface.GetTextSize(word)
+            totalWidth = totalWidth + wordlen
+
+            -- Wrap around when the max width is reached
+            if wordlen >= maxWidth then -- Split the word if the word is too big
+                local splitWord, splitPoint = charWrap(word, maxWidth - (totalWidth - wordlen), maxWidth)
+                totalWidth = splitPoint
+                return splitWord
+            elseif totalWidth < maxWidth then
+                return word
+            end
+
+            -- Split before the word
+            if char == ' ' then
+                totalWidth = wordlen - spaceWidth
+                return '\n' .. string.sub(word, 2)
+            end
+
+            totalWidth = wordlen
+            return '\n' .. word
+        end)
+
+        local count = text:gsub("[^\n]", ""):len()+1
+
+    return text, count
+end
+
 function AddChatMessage(sender, text, chatTypeS, target)
 
 	local typeColor = Color(0, 0, 0)
@@ -470,85 +525,26 @@ function AddChatMessage(sender, text, chatTypeS, target)
 
     end
 
-    local chatTxt = vgui.Create("RichText", chatParent)
+    local chatTxt = vgui.Create("Panel", chatParent)
     chatTxt:SetContentAlignment(7)
     chatTxt:Dock(TOP)
-    chatTxt:SetVerticalScrollbarEnabled(false)
-    chatTxt:InsertColorChange( typeColor.r, typeColor.g, typeColor.b, 255 )
-    chatTxt:SetZPos(1)
+    chatTxt:InsertColorChange()
     chatTxt:SetWide(chatLogPanel:GetWide())
     chatTxt:SizeToContents()
-
-    -- Count the number of '\n' characters in the text
-    print(text)
-    local _, count = string.gsub(text, "/skip", "\n") -- Add 1 to account for the last line that doesn't end with a newline character.
-    count = count + 1
+    local message, count = textWrap(text, "sChat_18", chatLogPanel:GetWide() - 10)
     print(count)
-
-    -- Get the height of a single line of text (assuming you have already set the font)
-    local _, lineHeight = surface.GetTextSize("A")
-
-    -- Calculate the total height based on the number of lines and their heights
+    local _, lineHeight = surface.GetTextSize("sChat_18") -- Replace "Sample line" with your desired font and text
     local totalHeight = count * lineHeight
 
-    -- Set the height of chatTxt to fit all the lines
     chatTxt:SetTall(totalHeight)
-
-    -- Finally, append the text to chatTxt
-    chatTxt:AppendText(text)
-
-    --abcdefghijklmnopqrstuvwxyz
-    /*
-    local function GetSplitSpot(str, maxWidth)
-        for splitSpot = #str, 1, -1 do
-            local testStr = string.sub(str, 1, splitSpot)
-            surface.SetFont("sChat_18") -- Replace "YourFontNameHere" with the font name you are using.
-            local wLine, _ = surface.GetTextSize(testStr)
-    
-            if wLine <= maxWidth then
-                return splitSpot - 2
-            end
-        end
-    
-        return 1 -- If maxWidth is too small to fit even one character, return 1.
-    end
-    
-    local wText, _ = surface.GetTextSize(text)
-    local maxWidth = chatTxt:GetWide()
-    local splitSpot = GetSplitSpot(text, maxWidth)
-    local textCopy = text
-
-    local function SplitStringAtEveryX(str, x)
-        local parts = {}
-        textCopy = str
-
-        while string.len(textCopy) > x do
-            local part = string.sub(textCopy,1 , x)
-            textCopy = string.sub(textCopy, x + 1)
-            table.insert(parts, part .. "\n")
-        end
-
-        table.insert(parts, textCopy)
-    
-        return parts
-    end
-
-    local parts = SplitStringAtEveryX(text, splitSpot)
-    local totalHeight = 0
-    
-    for _, part in ipairs(parts) do
-        local _, hLine = surface.GetTextSize(part)
-        totalHeight = totalHeight + (hLine / 1.5)
-        chatTxt:AppendText(part)
-    end
-    
-    chatTxt:SetTall(totalHeight)
-*/
-
 
     chatTxt.PerformLayout = function (self)
         self:SetFontInternal("sChat_18")
     end
+    --abcdefghijklmnopqrstuvwxyz
+    function chatTxt:Paint( w, h )
+        draw.DrawText( message, "sChat_18", 0, 0, Color( typeColor.r, typeColor.g, typeColor.b, 255 ), TEXT_ALIGN_LEFT )
+    end    
 
     local chatInfo = vgui.Create("RichText", chatParent)
     chatInfo:SetContentAlignment(7)
