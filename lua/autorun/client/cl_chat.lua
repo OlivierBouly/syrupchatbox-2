@@ -472,13 +472,21 @@ function AddChatMessage(sender, text, chatTypeS, target)
         local lines = {""}
     
         for _, word in ipairs(words) do
-            local lineWithWord = lines[#lines] .. " " .. word
-            local wLine, _ = surface.GetTextSize(lineWithWord)
-    
-            if wLine <= maxWidth then
-                lines[#lines] = lineWithWord
+            if lines[#lines] == "" then
+                lines[#lines] = word
             else
-                table.insert(lines, word)
+                local lineWithWord = lines[#lines] .. " " .. word
+                local wLine, _ = surface.GetTextSize(lineWithWord)
+    
+                if wLine <= maxWidth then
+                    lines[#lines] = lineWithWord
+                else
+                    while #word > 0 do
+                        local remainingWord = string.sub(word, 1, maxWidth)
+                        table.insert(lines, remainingWord)
+                        word = string.sub(word, maxWidth + 1)
+                    end
+                end
             end
         end
     
@@ -490,12 +498,12 @@ function AddChatMessage(sender, text, chatTypeS, target)
     local splitText = SplitTextToFitWidth(text, maxWidth)
     chatTxt:AppendText(splitText)
 
-    local newlineCount = text:gsub("[^\n]", ""):len() and 1
+    local newlineCount = text:gsub("[^\n]", ""):len()
     local _, lineHeight = surface.GetTextSize(splitText) -- Replace "Sample line" with your desired font and text
     local totalHeight = newlineCount * lineHeight
 
     -- Set the height of chatTxt to fit all the lines
-    chatTxt:SetTall(totalHeight)
+    chatTxt:SetTall(math.max(totalHeight, lineHeight))
 
 
     chatTxt.PerformLayout = function (self)
